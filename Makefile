@@ -34,13 +34,12 @@ configure-hooks:
 		done; \
 	fi
 
-# ?  Checks for required dependencies (Node.js and pnpm/npm)
+# ?  Checks for required dependencies (Node.js and pnpm)
 check-deps:
 	@echo -e "$(CYAN)Checking dependencies...$(RESET)"
 	@which docker > /dev/null && { echo -e "$(GREEN)$(OK) Docker is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) Docker is not installed. Please install it to proceed.$(RESET)"; exit 1; }
 	@which node > /dev/null && { echo -e "$(GREEN)$(OK) Node.js is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) Node.js is not installed. Please install it to proceed.$(RESET)"; exit 1; }
 	@which pnpm > /dev/null && { echo -e "$(GREEN)$(OK) pnpm is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) pnpm is not installed. Please install it to proceed.$(RESET)"; exit 1; }
-	@which npm > /dev/null && { echo -e "$(GREEN)$(OK) npm is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) npm is not installed. Please install it to proceed.$(RESET)"; exit 1; }
 	@echo -e
 	@echo -e "$(GREEN)All dependencies are satisfied.$(RESET)"
 

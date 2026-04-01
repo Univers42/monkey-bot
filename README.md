@@ -8,13 +8,13 @@ This project now uses Vite as the server runtime (dev and production preview).
 ### 1. Install dependencies locally
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. Run in development mode
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Server runs on `http://localhost:3000`.

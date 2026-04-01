@@ -2,6 +2,7 @@
   "name": "monkey-bot",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.17.1",
   "description": "TypeScript Playwright bot server",
   "main": "dist/server.js",
   "scripts": {

@@ -1,22 +1,26 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 FROM node:20-alpine AS build
 WORKDIR /app
+RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
-COPY package*.json tsconfig.json vite.config.ts index.html ./
+COPY package.json pnpm-lock.yaml tsconfig.json vite.config.ts index.html ./
 COPY src ./src
-RUN npm run build
+RUN pnpm run build
 
 FROM node:20-alpine AS prod-deps
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
 
 FROM node:20-alpine AS runtime
 WORKDIR /app
+RUN corepack enable
 
 RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont dumb-init
 
@@ -29,11 +33,11 @@ RUN addgroup -S app && adduser -S -G app app
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY package*.json vite.config.ts ./
+COPY package.json pnpm-lock.yaml vite.config.ts ./
 COPY src ./src
 
 USER app
 EXPOSE 3000
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["npm", "run", "start"]
+CMD ["pnpm", "run", "start"]
