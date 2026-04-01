@@ -6,7 +6,7 @@ RUN npm ci
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY package*.json tsconfig.json ./
+COPY package*.json tsconfig.json vite.config.ts index.html ./
 COPY src ./src
 RUN npm run build
 
@@ -29,10 +29,11 @@ RUN addgroup -S app && adduser -S -G app app
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-COPY package*.json ./
+COPY package*.json vite.config.ts ./
+COPY src ./src
 
 USER app
 EXPOSE 3000
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/server.js"]
+CMD ["npm", "run", "start"]

@@ -3,6 +3,8 @@ This project main's goal is to create a bot to automate testing and security iss
 
 ## Quick start (TypeScript + Playwright + Docker)
 
+This project now uses Vite as the server runtime (dev and production preview).
+
 ### 1. Install dependencies locally
 
 ```bash
@@ -31,6 +33,7 @@ This uses a multi-stage Alpine-based build:
 
 ### 4. API endpoints
 
+- Swagger UI: `GET /docs`
 - `GET /health` : health probe
 - `POST /run` : runs a browser check
 

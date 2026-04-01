@@ -10,6 +10,9 @@ CYAN			:= \033[0;36m
 RESET			:= \033[0m
 DEFAULT_GOAL 	:= help
 DOCKER_COMPOSE 	:= docker compose
+OK				:= $(GREEN)🗸
+WARNING			:= $(YELLOW)⚠
+ERROR			:= $(RED)𐄂
 
 HOOKS_DIR := vendor/scripts/hooks
 
@@ -33,47 +36,52 @@ configure-hooks:
 
 # ?  Checks for required dependencies (Node.js and pnpm/npm)
 check-deps:
-	@echo "$(BLUE)Checking dependencies...$(RESET)"
-	@which docker > /dev/null && { echo "✅ $(GREEN)Docker is installed.$(RESET)"; } || { echo "🛑 $(RED)Docker is not installed. Please install it to proceed.$(RESET)"; exit 1; }
-	@which node > /dev/null && { echo "✅ $(GREEN)Node.js is installed.$(RESET)"; } || { echo "🛑 $(RED)Node.js is not installed. Please install it to proceed.$(RESET)"; exit 1; }
-	@which pnpm > /dev/null && { echo "✅ $(GREEN)pnpm is installed.$(RESET)"; } || { echo "🛑 $(RED)pnpm is not installed. Please install it to proceed.$(RESET)"; exit 1; }
-	@which npm > /dev/null && { echo "✅ $(GREEN)npm is installed.$(RESET)"; } || { echo "🛑 $(RED)npm is not installed. Please install it to proceed.$(RESET)"; exit 1; }
-	@echo
-	@echo "$(GREEN)All dependencies are satisfied.$(RESET)"
+	@echo -e "$(CYAN)Checking dependencies...$(RESET)"
+	@which docker > /dev/null && { echo -e "$(GREEN)$(OK) Docker is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) Docker is not installed. Please install it to proceed.$(RESET)"; exit 1; }
+	@which node > /dev/null && { echo -e "$(GREEN)$(OK) Node.js is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) Node.js is not installed. Please install it to proceed.$(RESET)"; exit 1; }
+	@which pnpm > /dev/null && { echo -e "$(GREEN)$(OK) pnpm is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) pnpm is not installed. Please install it to proceed.$(RESET)"; exit 1; }
+	@which npm > /dev/null && { echo -e "$(GREEN)$(OK) npm is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) npm is not installed. Please install it to proceed.$(RESET)"; exit 1; }
+	@echo -e
+	@echo -e "$(GREEN)All dependencies are satisfied.$(RESET)"
 
 # ? 🔨 Builds the Docker image
 docker-build:
 	@$(DOCKER_COMPOSE) build
+	@echo -e "$(GREEN)$(OK) Docker image has been built successfully!$(RESET)"
 
 # ? 🚀 Starts the Docker service in detached mode
 docker-up:
 	@$(DOCKER_COMPOSE) up -d
+	@echo -e "$(GREEN)$(OK) Docker service is up and running!$(RESET)"
+	@echo -e "$(CYAN) Visit http://localhost:3000 $(RESET)"
 
 # ? 🗑️  Stops and removes the Docker service, network, volumes, and local images
 docker-remove:
 	@$(DOCKER_COMPOSE) down --rmi local --volumes --remove-orphans
+	@echo -e "$(GREEN)$(OK) Docker service has been removed.$(RESET)"
 
 # ? 🛑  Stops the Docker service and removes containers and networks
 docker-down:
 	@$(DOCKER_COMPOSE) down
+	@echo -e "$(GREEN)$(OK) Docker service has been stopped and containers removed.$(RESET)"
 
 # ? 🧹  Stops the Docker service and removes all images, volumes, and orphan containers
 docker-fclean:
-	@echo -en "$(YELLOW)⚠ Warning: This will remove all Docker images, volumes, and orphan containers!$(RESET)\n"
+	@echo -en "$(YELLOW)$(WARNING) Warning: This will remove all Docker images, volumes, and orphan containers!$(RESET)\n"
 	@$(DOCKER_COMPOSE) down --rmi all --volumes --remove-orphans
-	@echo -e "$(GREEN)🗸 All Docker resources have been removed.$(RESET)"
+	@echo -e "$(GREEN)$(OK) All Docker resources have been removed.$(RESET)"
 
 # ? 🔍  Runs the TypeScript linter
 lint:
 	@echo -en "$(BLUE)Running linter...$(RESET)"
 	@pnpm run lint
-	@echo -e "\n$(GREEN)🗸 Linting completed successfully!$(RESET)"
+	@echo -e "\n$(GREEN)$(OK) Linting completed successfully!$(RESET)"
 
 # ? 🛠️  Fixes lint issues automatically when possible
 lint-fix:
 	@echo -en "$(BLUE)Running linter with auto-fix...$(RESET)"
 	@pnpm run lint:fix
-	@echo -e "\n$(GREEN)🗸 Linting and auto-fixing completed successfully!$(RESET)"
+	@echo -e "\n$(GREEN)$(OK) Linting and auto-fixing completed successfully!$(RESET)"
 
 # ? ❓ Displays this help message
 help:
