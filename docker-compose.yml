@@ -1,0 +1,19 @@
+services:
+  monkey-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monkey-bot
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      CHROMIUM_PATH: /usr/bin/chromium-browser
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
