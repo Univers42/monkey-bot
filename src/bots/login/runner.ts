@@ -88,8 +88,7 @@ export async function runLoginBot(input: LoginBotInput): Promise<LoginBotResult>
         notes.push(`Login flow interaction failed: ${errorMessage}`);
       }
     } else {
-      notes.push("Login attempt skipped because username/password were not provided.");
-      notes.push("Use this scaffold to validate page readiness until login flow is implemented.");
+      notes.push("Login attempt skipped because username/password were not provided.", "Use this scaffold to validate page readiness until login flow is implemented.");
     }
 
     const title = await page.title();
