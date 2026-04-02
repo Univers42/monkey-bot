@@ -1,7 +1,8 @@
 import { defineConfig, loadEnv, Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { resolve } from "node:path";
-import { runBot } from "./src/bot";
+import { BotInputValidationError, BotNotFoundError } from "./src/orchestrator/errors";
+import { listBots, runBotById } from "./src/orchestrator/runBot";
 import { openApiDocument } from "./src/swagger";
 
 type RunBody = {
@@ -9,6 +10,8 @@ type RunBody = {
   waitForSelector?: string;
   timeoutMs?: number;
 };
+
+const DEFAULT_BOT_ID = "smoke";
 
 function readJsonBody(req: IncomingMessage): Promise<RunBody> {
   return new Promise((resolve, reject) => {
@@ -49,6 +52,19 @@ function normalizePath(pathname: string): string {
   }
 
   return pathname.replace(/\/+$/, "");
+}
+
+function resolveBotIdForRunPath(pathname: string): string | undefined {
+  if (pathname === "/run") {
+    return DEFAULT_BOT_ID;
+  }
+
+  const match = pathname.match(/^\/run\/([^/]+)$/);
+  if (!match) {
+    return undefined;
+  }
+
+  return decodeURIComponent(match[1]);
 }
 
 function docsHtml(): string {
@@ -94,6 +110,13 @@ function apiPlugin(): Plugin {
       return;
     }
 
+    if (method === "GET" && normalizedPath === "/bots") {
+      sendJson(res, 200, {
+        bots: listBots()
+      });
+      return;
+    }
+
     if (method === "GET" && normalizedPath === "/docs/openapi.json") {
       sendJson(res, 200, openApiDocument);
       return;
@@ -106,23 +129,25 @@ function apiPlugin(): Plugin {
       return;
     }
 
-    if (method === "POST" && normalizedPath === "/run") {
+    const botId = method === "POST" ? resolveBotIdForRunPath(normalizedPath) : undefined;
+    if (method === "POST" && botId) {
       readJsonBody(req)
-        .then(async (body) => {
-          if (!body.url) {
-            sendJson(res, 400, { error: "Missing required field: url" });
-            return;
-          }
-
+        .then(async (body: RunBody) => {
           try {
-            const result = await runBot({
-              url: body.url,
-              waitForSelector: body.waitForSelector,
-              timeoutMs: body.timeoutMs
-            });
+            const result = await runBotById(botId, body);
 
             sendJson(res, 200, { ok: true, result });
           } catch (error) {
+            if (error instanceof BotNotFoundError) {
+              sendJson(res, 404, { ok: false, error: error.message });
+              return;
+            }
+
+            if (error instanceof BotInputValidationError) {
+              sendJson(res, 400, { ok: false, error: error.message });
+              return;
+            }
+
             const message = error instanceof Error ? error.message : "Unknown bot error";
             sendJson(res, 500, { ok: false, error: message });
           }

@@ -37,12 +37,14 @@ This uses a multi-stage Alpine-based build:
 
 - Swagger UI: `GET /docs`
 - `GET /health` : health probe
-- `POST /run` : runs a browser check
+- `GET /bots` : lists available bots
+- `POST /run` : runs the default bot (`smoke`)
+- `POST /run/:botId` : runs a specific bot
 
 Example request:
 
 ```bash
-curl -X POST http://localhost:3000/run \
+curl -X POST http://localhost:3000/run/smoke \
     -H "Content-Type: application/json" \
     -d '{
         "url": "https://example.com",
@@ -64,6 +66,32 @@ Example response:
     }
 }
 ```
+
+## Bot architecture
+
+The project uses a bot registry/orchestrator model so multiple bots can live in the same repository with low coupling.
+
+Current structure:
+
+```text
+src/
+    bots/
+        smoke/
+            index.ts      # bot metadata + contract implementation
+            schema.ts     # input parsing and validation
+            runner.ts     # Playwright logic
+    orchestrator/
+        errors.ts       # typed orchestration errors
+        registry.ts     # bot registration map
+        runBot.ts       # listBots + runBotById
+        types.ts        # shared bot contract
+```
+
+To add a new bot:
+
+1. Create `src/bots/<your-bot>/index.ts`, `schema.ts`, and `runner.ts`.
+1. Register it in `src/orchestrator/registry.ts`.
+1. Call it with `POST /run/<your-bot-id>`.
 
 
 # 1. Browser automation

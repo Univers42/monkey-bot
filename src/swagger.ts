@@ -36,9 +36,45 @@ export const openApiDocument = {
         }
       }
     },
+    "/bots": {
+      get: {
+        summary: "List available bots",
+        responses: {
+          200: {
+            description: "Bot catalog",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    bots: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: {
+                            type: "string",
+                            example: "smoke"
+                          },
+                          description: {
+                            type: "string"
+                          }
+                        },
+                        required: ["id", "description"]
+                      }
+                    }
+                  },
+                  required: ["bots"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/run": {
       post: {
-        summary: "Run a Playwright bot check",
+        summary: "Run the default bot (smoke)",
         requestBody: {
           required: true,
           content: {
@@ -112,6 +148,103 @@ export const openApiDocument = {
           },
           400: {
             description: "Validation error"
+          },
+          500: {
+            description: "Bot execution error"
+          }
+        }
+      }
+    },
+    "/run/{botId}": {
+      post: {
+        summary: "Run a bot by id",
+        parameters: [
+          {
+            name: "botId",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string"
+            },
+            example: "smoke"
+          }
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  url: {
+                    type: "string",
+                    format: "uri",
+                    example: "https://example.com"
+                  },
+                  waitForSelector: {
+                    type: "string",
+                    example: "h1"
+                  },
+                  timeoutMs: {
+                    type: "integer",
+                    minimum: 1,
+                    example: 20000
+                  }
+                },
+                required: ["url"]
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "Bot run completed",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    ok: {
+                      type: "boolean",
+                      example: true
+                    },
+                    result: {
+                      type: "object",
+                      properties: {
+                        title: {
+                          type: "string",
+                          example: "Example Domain"
+                        },
+                        finalUrl: {
+                          type: "string",
+                          example: "https://example.com/"
+                        },
+                        consoleErrors: {
+                          type: "array",
+                          items: {
+                            type: "string"
+                          }
+                        },
+                        failedRequests: {
+                          type: "array",
+                          items: {
+                            type: "string"
+                          }
+                        }
+                      },
+                      required: ["title", "finalUrl", "consoleErrors", "failedRequests"]
+                    }
+                  },
+                  required: ["ok", "result"]
+                }
+              }
+            }
+          },
+          400: {
+            description: "Validation error"
+          },
+          404: {
+            description: "Bot not found"
           },
           500: {
             description: "Bot execution error"
