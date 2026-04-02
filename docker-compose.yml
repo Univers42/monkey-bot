@@ -4,12 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: monkey-bot
+    env_file:
+      - .env
     ports:
-      - "3000:3000"
-    environment:
-      PORT: "3000"
-      CHROMIUM_PATH: /usr/bin/chromium-browser
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      - "${PORT:-3000}:3000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]

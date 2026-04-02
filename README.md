@@ -5,6 +5,8 @@ This project main's goal is to create a bot to automate testing and security iss
 
 This project now uses Vite as the server runtime (dev and production preview).
 
+Project runtime values are loaded from .env for the server port and Chromium path.
+
 ### 1. Install dependencies locally
 
 ```bash

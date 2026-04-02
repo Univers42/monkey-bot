@@ -1,5 +1,6 @@
-import { defineConfig, Plugin } from "vite";
+import { defineConfig, loadEnv, Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { resolve } from "node:path";
 import { runBot } from "./src/bot";
 import { openApiDocument } from "./src/swagger";
 
@@ -36,6 +37,20 @@ function sendJson(res: ServerResponse, status: number, payload: unknown): void {
   res.end(JSON.stringify(payload));
 }
 
+function redirect(res: ServerResponse, location: string): void {
+  res.statusCode = 308;
+  res.setHeader("Location", location);
+  res.end();
+}
+
+function normalizePath(pathname: string): string {
+  if (pathname === "/") {
+    return pathname;
+  }
+
+  return pathname.replace(/\/+$/, "");
+}
+
 function docsHtml(): string {
   return `<!doctype html>
 <html lang="en">
@@ -50,7 +65,7 @@ function docsHtml(): string {
     <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <script>
       window.ui = SwaggerUIBundle({
-        url: '/docs/openapi.json',
+        url: './openapi.json',
         dom_id: '#swagger-ui'
       });
     </script>
@@ -62,25 +77,36 @@ function apiPlugin(): Plugin {
   const handler = (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     const method = req.method || "GET";
     const path = (req.url || "").split("?")[0];
+    const normalizedPath = normalizePath(path);
 
-    if (method === "GET" && path === "/health") {
+    if (method === "GET" && path === "/docs") {
+      redirect(res, "/docs/");
+      return;
+    }
+
+    if (method === "GET" && path === "/docs/openapi.json/") {
+      redirect(res, "/docs/openapi.json");
+      return;
+    }
+
+    if (method === "GET" && normalizedPath === "/health") {
       sendJson(res, 200, { status: "ok" });
       return;
     }
 
-    if (method === "GET" && path === "/docs/openapi.json") {
+    if (method === "GET" && normalizedPath === "/docs/openapi.json") {
       sendJson(res, 200, openApiDocument);
       return;
     }
 
-    if (method === "GET" && (path === "/docs" || path === "/docs/")) {
+    if (method === "GET" && normalizedPath === "/docs") {
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.end(docsHtml());
       return;
     }
 
-    if (method === "POST" && path === "/run") {
+    if (method === "POST" && normalizedPath === "/run") {
       readJsonBody(req)
         .then(async (body) => {
           if (!body.url) {
@@ -122,6 +148,27 @@ function apiPlugin(): Plugin {
   };
 }
 
-export default defineConfig({
-  plugins: [apiPlugin()]
+export default defineConfig(({ mode }) => {
+  const projectRoot = resolve(process.cwd(), "..");
+  const env = {
+    ...loadEnv(mode, projectRoot, ""),
+    ...loadEnv(mode, process.cwd(), "")
+  };
+  const port = Number(env.PORT || process.env.PORT || 3000);
+
+  process.env.PORT = String(port);
+  process.env.CHROMIUM_PATH = env.CHROMIUM_PATH || process.env.CHROMIUM_PATH || "/usr/bin/chromium-browser";
+  process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD || process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD || "1";
+
+  return {
+    plugins: [apiPlugin()],
+    server: {
+      host: "0.0.0.0",
+      port
+    },
+    preview: {
+      host: "0.0.0.0",
+      port
+    }
+  };
 });

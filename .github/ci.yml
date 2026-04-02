@@ -1,0 +1,74 @@
+# ============================================
+# CI Pipeline
+# ============================================
+# Runs on every push to develop/main and on every PR.
+# Steps: lint → typecheck
+# Package manager: pnpm
+# ============================================
+
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10"
+
+jobs:
+  # ── Lint ─────────────────────────────────────────────
+  lint:
+    name: 🔍 Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: app/pnpm-lock.yaml
+
+      - name: Install app dependencies
+        run: cd app && pnpm install --frozen-lockfile
+
+      - name: Lint app
+        run: cd app && pnpm exec eslint .
+
+  # ── Type Check ──────────────────────────────────────
+  typecheck:
+    name: 🏗️ Type Check (Phase 0 strict)
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: app/pnpm-lock.yaml
+
+      - name: Install app dependencies
+        run: cd app && pnpm install --frozen-lockfile
+
+      # Strict Phase 0 check: No emits allowed
+      - name: Typecheck app
+        run: cd app && pnpm exec tsc --noEmit

@@ -76,9 +76,20 @@ docker-down:
 
 # ? 🧹 Stops the Docker service and removes all images, volumes, and orphan containers
 docker-fclean:
-	@echo -en "$(YELLOW)$(WARNING) Warning: This will remove all Docker images, volumes, and orphan containers!$(RESET)\n"
-	@$(DOCKER_COMPOSE) down --rmi all --volumes --remove-orphans
-	@echo -e "$(GREEN)$(OK) All Docker resources have been removed.$(RESET)"
+	@echo -en "$(YELLOW)$(WARNING) Warning: This will remove all Docker images, volumes, and orphan containers! Are you sure? (y/N) $(RESET)\n"
+	@read -r answer; if [ "$$answer" = "y" ]; then \
+		$(DOCKER_COMPOSE) down --rmi all --volumes --remove-orphans; \
+		echo -e "$(GREEN)$(OK) All Docker resources have been removed.$(RESET)"; \
+	else \
+		echo -e "$(YELLOW)$(WARNING) Operation cancelled.$(RESET)"; \
+	fi
+
+# ? 🔄 Rebuilds the Docker image and restarts the service
+docker-re:
+	@$(MAKE) docker-fclean $(NOPRINT)
+	@$(MAKE) docker-build $(NOPRINT)
+	@$(MAKE) docker-up $(NOPRINT)
+	@echo -e "$(GREEN)$(OK) Docker service has been rebuilt and restarted!$(RESET)"
 
 # ? 🔍 Runs the TypeScript linter
 lint:
@@ -92,6 +103,12 @@ lint-fix:
 	@echo -en "$(BLUE)Running linter with auto-fix...$(RESET)"
 	@pnpm run lint:fix
 	@echo -e "\n$(GREEN)$(OK) Linting and auto-fixing completed successfully!$(RESET)"
+
+# ? ✅ Runs the TypeScript type checker
+typecheck:
+	@echo -en "$(BLUE)Running TypeScript type check...$(RESET)"
+	@pnpm run typecheck
+	@echo -e "\n$(GREEN)$(OK) TypeScript type check completed successfully!$(RESET)"
 
 # ? 🛡️  Runs the security audit
 audit:
