@@ -184,6 +184,10 @@ To add a new bot:
 ## Tools
 - OWASP ZAP (great beginner-friendly scanner)
 - Burp Suite
+## Languages
+- TypeScript → End-to-end bots and browser bots
+- Python → Helper scripts and input generation
+- Go → Concurrent stress and massive sockets
 ## What bot can do
 - Inject payloads into forms
 - Check if scripts execute (XSS)
