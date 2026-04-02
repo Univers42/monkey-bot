@@ -166,7 +166,7 @@ export const openApiDocument = {
             schema: {
               type: "string"
             },
-            example: "smoke"
+            example: "login-smoke"
           }
         ],
         requestBody: {
@@ -179,35 +179,151 @@ export const openApiDocument = {
                   url: {
                     type: "string",
                     format: "uri",
-                    example: "https://example.com"
+                    example: "https://example.com/login"
                   },
-                  waitForSelector: {
-                    type: "string",
-                    example: "h1"
+                  credentials: {
+                    type: "object",
+                    properties: {
+                      username: {
+                        type: "string",
+                        example: "demo-user"
+                      },
+                      password: {
+                        type: "string",
+                        example: "demo-pass"
+                      }
+                    },
+                    required: ["username", "password"]
                   },
-                  username: {
-                    type: "string",
-                    example: "demo-user"
+                  invalidCredentials: {
+                    type: "object",
+                    properties: {
+                      username: {
+                        type: "string",
+                        example: "demo-user"
+                      },
+                      password: {
+                        type: "string",
+                        example: "wrong-pass"
+                      }
+                    }
                   },
-                  password: {
-                    type: "string",
-                    example: "demo-pass"
+                  secondaryCredentials: {
+                    type: "object",
+                    properties: {
+                      username: {
+                        type: "string",
+                        example: "demo-user-2"
+                      },
+                      password: {
+                        type: "string",
+                        example: "demo-pass-2"
+                      }
+                    }
                   },
-                  usernameSelector: {
-                    type: "string",
-                    example: "input[name='email']"
+                  selectors: {
+                    type: "object",
+                    properties: {
+                      form: {
+                        type: "string",
+                        example: "form"
+                      },
+                      username: {
+                        type: "string",
+                        example: "input[name='email']"
+                      },
+                      password: {
+                        type: "string",
+                        example: "input[name='password']"
+                      },
+                      submit: {
+                        type: "string",
+                        example: "button[type='submit']"
+                      },
+                      success: {
+                        type: "string",
+                        example: "[data-test='dashboard']"
+                      },
+                      error: {
+                        type: "string",
+                        example: "[role='alert']"
+                      },
+                      logout: {
+                        type: "string",
+                        example: "button[data-test='logout']"
+                      }
+                    }
                   },
-                  passwordSelector: {
-                    type: "string",
-                    example: "input[name='password']"
+                  expectations: {
+                    type: "object",
+                    properties: {
+                      postLoginUrlIncludes: {
+                        type: "string",
+                        example: "/app"
+                      },
+                      protectedUrl: {
+                        type: "string",
+                        example: "/app"
+                      },
+                      unauthorizedUrlIncludes: {
+                        type: "string",
+                        example: "/login"
+                      },
+                      sessionPersistsAfterReload: {
+                        type: "boolean",
+                        example: true
+                      },
+                      sessionPersistsAcrossTabs: {
+                        type: "boolean",
+                        example: true
+                      },
+                      sessionPersistsAfterBrowserRestart: {
+                        type: "boolean",
+                        example: false
+                      },
+                      expectedCookieNames: {
+                        type: "array",
+                        items: {
+                          type: "string"
+                        },
+                        example: ["sessionid"]
+                      }
+                    }
                   },
-                  submitSelector: {
-                    type: "string",
-                    example: "button[type='submit']"
+                  api: {
+                    type: "object",
+                    properties: {
+                      url: {
+                        type: "string",
+                        example: "/api/auth/login"
+                      },
+                      contentType: {
+                        type: "string",
+                        enum: ["json", "form"],
+                        example: "json"
+                      },
+                      usernameField: {
+                        type: "string",
+                        example: "email"
+                      },
+                      passwordField: {
+                        type: "string",
+                        example: "password"
+                      }
+                    }
                   },
-                  successSelector: {
-                    type: "string",
-                    example: "[data-test='dashboard']"
+                  realtime: {
+                    type: "object",
+                    properties: {
+                      wsUrl: {
+                        type: "string",
+                        example: "wss://example.com/ws"
+                      },
+                      expectAuthenticatedMessageIncludes: {
+                        type: "string",
+                        example: "authenticated"
+                      }
+                    }
                   },
                   timeoutMs: {
                     type: "integer",
@@ -235,28 +351,91 @@ export const openApiDocument = {
                     result: {
                       type: "object",
                       properties: {
-                        title: {
+                        suite: {
                           type: "string",
-                          example: "Example Domain"
+                          example: "login-smoke"
                         },
-                        finalUrl: {
-                          type: "string",
-                          example: "https://example.com/"
+                        ok: {
+                          type: "boolean",
+                          example: true
                         },
-                        consoleErrors: {
-                          type: "array",
-                          items: {
-                            type: "string"
+                        summary: {
+                          type: "object",
+                          properties: {
+                            passed: {
+                              type: "integer",
+                              example: 4
+                            },
+                            failed: {
+                              type: "integer",
+                              example: 0
+                            },
+                            skipped: {
+                              type: "integer",
+                              example: 1
+                            }
                           }
                         },
-                        failedRequests: {
+                        artifactsDir: {
+                          type: "string",
+                          example: ".artifacts/login/login-smoke"
+                        },
+                        scenarios: {
                           type: "array",
                           items: {
-                            type: "string"
+                            type: "object",
+                            properties: {
+                              key: {
+                                type: "string",
+                                example: "valid-login"
+                              },
+                              title: {
+                                type: "string",
+                                example: "valid credentials grant access"
+                              },
+                              status: {
+                                type: "string",
+                                enum: ["passed", "failed", "skipped"],
+                                example: "passed"
+                              },
+                              durationMs: {
+                                type: "integer",
+                                example: 1280
+                              },
+                              notes: {
+                                type: "array",
+                                items: {
+                                  type: "string"
+                                }
+                              },
+                              errors: {
+                                type: "array",
+                                items: {
+                                  type: "string"
+                                }
+                              },
+                              finalUrl: {
+                                type: "string",
+                                example: "https://example.com/app"
+                              },
+                              consoleErrors: {
+                                type: "array",
+                                items: {
+                                  type: "string"
+                                }
+                              },
+                              failedRequests: {
+                                type: "array",
+                                items: {
+                                  type: "string"
+                                }
+                              }
+                            },
+                            required: ["key", "title", "status", "durationMs", "notes", "errors", "consoleErrors", "failedRequests"]
                           }
                         }
                       },
-                      required: ["title", "finalUrl", "consoleErrors", "failedRequests"]
+                      required: ["suite", "ok", "summary", "scenarios"]
                     }
                   },
                   required: ["ok", "result"]

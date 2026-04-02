@@ -43,7 +43,12 @@ This uses a multi-stage Alpine-based build:
 
 Available bots right now:
 - `smoke`: generic page smoke diagnostics
-- `login`: login-flow scaffold (safe to run before login is implemented)
+- `login`: legacy alias of `login-smoke`
+- `login-smoke`: normal login flow
+- `login-validation`: input validation and malformed payloads
+- `login-security`: abuse, masking, protected routes, replay, malformed requests
+- `login-session-lifecycle`: persistence, reload, tabs, logout, restart behavior
+- `login-multiuser-realtime`: concurrent users, shared tabs, websocket auth checks
 
 Example request:
 
@@ -71,19 +76,27 @@ Example response:
 }
 ```
 
-Example login scaffold request:
+Example login suite request:
 
 ```bash
-curl -X POST http://localhost:3000/run/login \
+curl -X POST http://localhost:3000/run/login-smoke \
     -H "Content-Type: application/json" \
     -d '{
         "url": "https://example.com/login",
-        "username": "demo-user",
-        "password": "demo-pass",
-        "usernameSelector": "input[name=email]",
-        "passwordSelector": "input[name=password]",
-        "submitSelector": "button[type=submit]",
-        "successSelector": "[data-test=dashboard]",
+        "credentials": {
+            "username": "demo-user",
+            "password": "demo-pass"
+        },
+        "selectors": {
+            "username": "input[name=email]",
+            "password": "input[name=password]",
+            "submit": "button[type=submit]",
+            "success": "[data-test=dashboard]"
+        },
+        "expectations": {
+            "postLoginUrlIncludes": "/app",
+            "protectedUrl": "/app"
+        },
         "timeoutMs": 20000
     }'
 ```
@@ -92,25 +105,29 @@ curl -X POST http://localhost:3000/run/login \
 
 This repo now includes a local login page built with the `vendor/libcss` submodule styles.
 
-- URL: `http://localhost:3000/login`
+- URL: `http://localhost:3000/`
 - Demo credentials: `demo-user` / `demo-pass`
 - Built-in success selector: `[data-test=dashboard]`
 
 Example request against the local login page:
 
 ```bash
-curl -X POST http://localhost:3000/run/login \
+curl -X POST http://localhost:3000/run/login-smoke \
     -H "Content-Type: application/json" \
     -d '{
-        "url": "http://localhost:3000/login",
-        "username": "demo-user",
-        "password": "demo-pass",
-        "successSelector": "[data-test=dashboard]",
+        "url": "http://localhost:3000/",
+        "credentials": {
+            "username": "demo-user",
+            "password": "demo-pass"
+        },
+        "selectors": {
+            "success": "[data-test=dashboard]"
+        },
         "timeoutMs": 20000
     }'
 ```
 
-If login does not exist yet, run the same request with only `url`. The bot will skip credential submission and still return navigation/network/console diagnostics.
+The structured payload is the preferred shape for the new suite. The legacy `login` alias still accepts flat fields such as `username`, `password`, and `successSelector`.
 
 ## Bot architecture
 
@@ -122,9 +139,10 @@ Current structure:
 src/
     bots/
         login/
-            index.ts      # bot metadata + contract implementation
-            schema.ts     # input parsing and validation
-            runner.ts     # Playwright login scaffold
+            index.ts      # exports the login bot family
+            schema.ts     # shared suite input parsing and validation
+            shared.ts     # browser/session/artifact helpers
+            runner.ts     # suite runners and scenario reporting
         smoke/
             index.ts      # bot metadata + contract implementation
             schema.ts     # input parsing and validation
@@ -141,6 +159,14 @@ To add a new bot:
 1. Create `src/bots/<your-bot>/index.ts`, `schema.ts`, and `runner.ts`.
 1. Register it in `src/orchestrator/registry.ts`.
 1. Call it with `POST /run/<your-bot-id>`.
+
+The login family now lives under `src/bots/login/` and shares helpers while exposing multiple ids:
+
+1. `login-smoke`
+1. `login-validation`
+1. `login-security`
+1. `login-session-lifecycle`
+1. `login-multiuser-realtime`
 
 
 # 1. Browser automation
@@ -193,86 +219,6 @@ To add a new bot:
 - Check if scripts execute (XSS)
 - Detect insecure headers
 - Crawl pages for vulnerabilities
-## And also
-### Authentication and session
-
-Test soft brute force, token reuse, session expiration, incomplete logout, and user switching without invalidating state.
-Attempt to bypass protected screens by entering directly through private paths.
-### Access control
-
-Perform actions with one user on another's resources.
-Change IDs, UUIDs, slugs, or parameters to detect IDORs and permission failures.
-### Malicious inputs
-
-Send large texts, unusual characters, HTML, Markdown, broken JSON, unexpected types, arrays where expected strings, null, or negative numbers.
-Look for validations only on the frontend but not on the backend.
-### XSS and dangerous rendering
-
-Test if comments, names, descriptions, or rich fields execute content when displayed.
-Review previews, tooltips, toasts, tables, and modals.
-
-### Injection
-
-Cases for SQL/NoSQL/command injection involving complex searches, filters, sorting, exports, or endpoints.
-Also templates, expressions, or internal search engines.
-### CSRF and Sensitive Actions
-
-Attempting authenticated actions without explicit user intent.
-Reviewing creation, editing, deletion, email/password changes, and invitations.
-### Rate Limiting and Abuse
-
-Login spam, registration spam, password recovery spam, search spam, file upload spam, and mass record creation spam.
-Measure when the system responds slowly, when it blocks, and whether it blocks by IP address, user, or session.
-### Race Conditions
-
-Triggering the same action multiple times in parallel: purchase, reservation, accept invitation, use coupon, delete/edit.
-Looking for duplicates, impossible states, and inconsistent balances.
-### File Uploads
-
-Large files, duplicate extensions, deceptive MIME types, strange names, corrupted images, SVG files, and ZIP files.
-Checking if the system stores, processes, or serves files insecurely. 
-### API abuse
-
-Calling endpoints outside the normal frontend flow.
-Repeating old requests, changing HTTP methods, removing expected headers, manipulating pagination/filters.
-### Business logic
-
-Skipping required flow steps.
-Creating invalid states: payment without order, invitation accepted twice, object deleted but still editable.
-### Frontend tampering
-
-Altering localStorage, sessionStorage, flags, client roles, hidden parameters, disabled forms.
-Confirming that the server does not trust anything from the browser.
-### Aggressive crawling
-
-Traversing all routes, including old, hidden, or indirectly linked ones.
-Detecting orphaned pages, legacy endpoints, and exposed assets.
-### Errors and leaks
-
-Forcing failures to see if stack traces, table names, keys, internal routes, or infrastructure details are exposed.
-Reviewing different error messages between "user does not exist" and "incorrect password."
-### Headers and Browser
-
-Review CSP, HttpOnly/Secure/SameSite cookies, CORS, framing, and sensitive content caching.
-Check behavior across multiple tabs and cross-sessions.
-### Resilience
-
-Simulate slow network conditions, incomplete requests, inappropriate refreshes, retries, duplicates, and partial connection loss.
-Look for state corruption in the UI and backend.
-### Bot Observability
-
-It shouldn't just "attack": it should classify the result as blocked, vulnerable, inconsistent, degraded, or suspicious.
-Save minimal evidence: route, abstract payload, response, impact, and severity.
-
-### Useful Architecture for the Bot:
-
-- Crawler to discover routes and forms.
-- Mutator to generate unusual or malicious inputs.
-- Scenario runner for real user flows.
-- Abuse engine for parallelism, repetition, and state manipulation.
-- Oracle to determine if something failed in an interesting way. 
-- Reporter to group findings by severity and reproducibility.
-
 
 # 5. Combine automation + security
 ## Use Playwright to:
