@@ -8,15 +8,23 @@ BLUE			:= \033[0;34m
 MAGENTA			:= \033[0;35m
 CYAN			:= \033[0;36m
 RESET			:= \033[0m
-DEFAULT_GOAL 	:= help
 DOCKER_COMPOSE 	:= docker compose
 OK				:= $(GREEN)🗸
 WARNING			:= $(YELLOW)⚠
 ERROR			:= $(RED)𐄂
 
+DEFAULT_GOAL 	:= help
+
+NOPRINT			:= --no-print-directory
+
 HOOKS_DIR := vendor/scripts/hooks
 
-# ? 🪝  Activate git hooks (auto-runs on make / make dev)
+# ? 🧪 Ensure .env file exists
+ensure-env:
+	@bash -c ./vendor/ensure_dotenv.sh
+	@echo -e "$(GREEN)$(OK) .env file is present.$(RESET)"
+
+# ? 🪝 Activate git hooks (auto-runs on make / make dev)
 configure-hooks:
 	@if [ ! -d .git ]; then \
 		echo -e "  $(YELLOW)⚠$(NC)  Not a git repo — skipping hook setup"; \
@@ -34,7 +42,7 @@ configure-hooks:
 		done; \
 	fi
 
-# ?  Checks for required dependencies (Node.js and pnpm)
+# ? 🔨 Checks for required dependencies (Node.js and pnpm)
 check-deps:
 	@echo -e "$(CYAN)Checking dependencies...$(RESET)"
 	@which docker > /dev/null && { echo -e "$(GREEN)$(OK) Docker is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) Docker is not installed. Please install it to proceed.$(RESET)"; exit 1; }
@@ -45,6 +53,8 @@ check-deps:
 
 # ? 🔨 Builds the Docker image
 docker-build:
+	@$(MAKE) check-deps $(NOPRINT)
+	@$(MAKE) ensure-env $(NOPRINT)
 	@$(DOCKER_COMPOSE) build
 	@echo -e "$(GREEN)$(OK) Docker image has been built successfully!$(RESET)"
 
@@ -59,28 +69,41 @@ docker-remove:
 	@$(DOCKER_COMPOSE) down --rmi local --volumes --remove-orphans
 	@echo -e "$(GREEN)$(OK) Docker service has been removed.$(RESET)"
 
-# ? 🛑  Stops the Docker service and removes containers and networks
+# ? 🛑 Stops the Docker service and removes containers and networks
 docker-down:
 	@$(DOCKER_COMPOSE) down
 	@echo -e "$(GREEN)$(OK) Docker service has been stopped and containers removed.$(RESET)"
 
-# ? 🧹  Stops the Docker service and removes all images, volumes, and orphan containers
+# ? 🧹 Stops the Docker service and removes all images, volumes, and orphan containers
 docker-fclean:
 	@echo -en "$(YELLOW)$(WARNING) Warning: This will remove all Docker images, volumes, and orphan containers!$(RESET)\n"
 	@$(DOCKER_COMPOSE) down --rmi all --volumes --remove-orphans
 	@echo -e "$(GREEN)$(OK) All Docker resources have been removed.$(RESET)"
 
-# ? 🔍  Runs the TypeScript linter
+# ? 🔍 Runs the TypeScript linter
 lint:
 	@echo -en "$(BLUE)Running linter...$(RESET)"
 	@pnpm run lint
 	@echo -e "\n$(GREEN)$(OK) Linting completed successfully!$(RESET)"
+
 
 # ? 🛠️  Fixes lint issues automatically when possible
 lint-fix:
 	@echo -en "$(BLUE)Running linter with auto-fix...$(RESET)"
 	@pnpm run lint:fix
 	@echo -e "\n$(GREEN)$(OK) Linting and auto-fixing completed successfully!$(RESET)"
+
+# ? 🛡️  Runs the security audit
+audit:
+	@echo -e "$(BLUE)Running security audit...$(RESET)"
+	@pnpm audit
+	@echo -e "\n$(GREEN)$(OK) Security audit completed successfully!$(RESET)"
+
+# ? 🔄 Updates git submodules
+update:
+	@echo -e "$(BLUE)Updating git submodules...$(RESET)"
+	@git submodule update --remote --merge
+	@echo -e "$(GREEN)$(OK) Submodules have been updated to their latest commits!$(RESET)"
 
 # ? ❓ Displays this help message
 help:
