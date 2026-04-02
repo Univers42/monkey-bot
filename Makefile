@@ -21,6 +21,7 @@ HOOKS_DIR := vendor/scripts/hooks
 
 # ? 🧪 Ensure .env file exists
 ensure-env:
+	@$(MAKE) configure-hooks > /dev/null
 	@bash -c ./vendor/ensure_dotenv.sh
 	@echo -e "$(GREEN)$(OK) .env file is present.$(RESET)"
 
@@ -44,6 +45,7 @@ configure-hooks:
 
 # ? 🔨 Checks for required dependencies (Node.js and pnpm)
 check-deps:
+	@$(MAKE) configure-hooks > /dev/null
 	@echo -e "$(CYAN)Checking dependencies...$(RESET)"
 	@which docker > /dev/null && { echo -e "$(GREEN)$(OK) Docker is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) Docker is not installed. Please install it to proceed.$(RESET)"; exit 1; }
 	@which node > /dev/null && { echo -e "$(GREEN)$(OK) Node.js is installed.$(RESET)"; } || { echo -e "$(RED)$(ERROR) Node.js is not installed. Please install it to proceed.$(RESET)"; exit 1; }
@@ -53,6 +55,7 @@ check-deps:
 
 # ? 🔨 Builds the Docker image
 docker-build:
+	@$(MAKE) configure-hooks > /dev/null
 	@$(MAKE) check-deps $(NOPRINT)
 	@$(MAKE) ensure-env $(NOPRINT)
 	@$(DOCKER_COMPOSE) build
@@ -60,22 +63,26 @@ docker-build:
 
 # ? 🚀 Starts the Docker service in detached mode
 docker-up:
+	@$(MAKE) configure-hooks > /dev/null
 	@$(DOCKER_COMPOSE) up -d
 	@echo -e "$(GREEN)$(OK) Docker service is up and running!$(RESET)"
 	@echo -e "$(CYAN) Visit http://localhost:3000 $(RESET)"
 
 # ? 🗑️  Stops and removes the Docker service, network, volumes, and local images
 docker-remove:
+	@$(MAKE) configure-hooks > /dev/null
 	@$(DOCKER_COMPOSE) down --rmi local --volumes --remove-orphans
 	@echo -e "$(GREEN)$(OK) Docker service has been removed.$(RESET)"
 
 # ? 🛑 Stops the Docker service and removes containers and networks
 docker-down:
+	@$(MAKE) configure-hooks > /dev/null
 	@$(DOCKER_COMPOSE) down
 	@echo -e "$(GREEN)$(OK) Docker service has been stopped and containers removed.$(RESET)"
 
 # ? 🧹 Stops the Docker service and removes all images, volumes, and orphan containers
 docker-fclean:
+	@$(MAKE) configure-hooks > /dev/null
 	@echo -en "$(YELLOW)$(WARNING) Warning: This will remove all Docker images, volumes, and orphan containers! Are you sure? (y/N) $(RESET)\n"
 	@read -r answer; if [ "$$answer" = "y" ]; then \
 		$(DOCKER_COMPOSE) down --rmi all --volumes --remove-orphans; \
@@ -86,6 +93,7 @@ docker-fclean:
 
 # ? 🔄 Rebuilds the Docker image and restarts the service
 docker-re:
+	@$(MAKE) configure-hooks > /dev/null
 	@$(MAKE) docker-fclean $(NOPRINT)
 	@$(MAKE) docker-build $(NOPRINT)
 	@$(MAKE) docker-up $(NOPRINT)
@@ -93,31 +101,35 @@ docker-re:
 
 # ? 🔍 Runs the TypeScript linter
 lint:
+	@$(MAKE) configure-hooks > /dev/null
 	@echo -en "$(BLUE)Running linter...$(RESET)"
 	@pnpm run lint
 	@echo -e "\n$(GREEN)$(OK) Linting completed successfully!$(RESET)"
 
-
 # ? 🛠️  Fixes lint issues automatically when possible
 lint-fix:
+	@$(MAKE) configure-hooks > /dev/null
 	@echo -en "$(BLUE)Running linter with auto-fix...$(RESET)"
 	@pnpm run lint:fix
 	@echo -e "\n$(GREEN)$(OK) Linting and auto-fixing completed successfully!$(RESET)"
 
 # ? ✅ Runs the TypeScript type checker
 typecheck:
+	@$(MAKE) configure-hooks > /dev/null
 	@echo -en "$(BLUE)Running TypeScript type check...$(RESET)"
 	@pnpm run typecheck
 	@echo -e "\n$(GREEN)$(OK) TypeScript type check completed successfully!$(RESET)"
 
 # ? 🛡️  Runs the security audit
 audit:
+	@$(MAKE) configure-hooks > /dev/null
 	@echo -e "$(BLUE)Running security audit...$(RESET)"
 	@pnpm audit
 	@echo -e "\n$(GREEN)$(OK) Security audit completed successfully!$(RESET)"
 
 # ? 🔄 Updates git submodules
 update:
+	@$(MAKE) configure-hooks > /dev/null
 	@echo -e "$(BLUE)Updating git submodules...$(RESET)"
 	@git submodule update --remote --merge
 	@echo -e "$(GREEN)$(OK) Submodules have been updated to their latest commits!$(RESET)"
