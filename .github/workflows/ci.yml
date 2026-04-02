@@ -16,7 +16,7 @@ on:
 
 env:
   NODE_VERSION: "22"
-  PNPM_VERSION: "10"
+  PNPM_VERSION: "10.17.1"
 
 jobs:
   # ── Lint ─────────────────────────────────────────────
@@ -37,13 +37,13 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-          cache-dependency-path: app/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install app dependencies
-        run: cd app && pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Lint app
-        run: cd app && pnpm exec eslint .
+      - name: Lint project
+        run: pnpm run lint
 
   # ── Type Check ──────────────────────────────────────
   typecheck:
@@ -64,11 +64,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
-          cache-dependency-path: app/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install app dependencies
-        run: cd app && pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       # Strict Phase 0 check: No emits allowed
-      - name: Typecheck app
-        run: cd app && pnpm exec tsc --noEmit
+      - name: Typecheck project
+        run: pnpm run typecheck
