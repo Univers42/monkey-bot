@@ -185,6 +185,30 @@ export const openApiDocument = {
                     type: "string",
                     example: "h1"
                   },
+                  username: {
+                    type: "string",
+                    example: "demo-user"
+                  },
+                  password: {
+                    type: "string",
+                    example: "demo-pass"
+                  },
+                  usernameSelector: {
+                    type: "string",
+                    example: "input[name='email']"
+                  },
+                  passwordSelector: {
+                    type: "string",
+                    example: "input[name='password']"
+                  },
+                  submitSelector: {
+                    type: "string",
+                    example: "button[type='submit']"
+                  },
+                  successSelector: {
+                    type: "string",
+                    example: "[data-test='dashboard']"
+                  },
                   timeoutMs: {
                     type: "integer",
                     minimum: 1,
