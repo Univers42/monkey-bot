@@ -10,6 +10,7 @@ RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml tsconfig.json vite.config.ts index.html ./
 COPY src ./src
+COPY vendor/libcss ./vendor/libcss
 RUN pnpm run build
 
 FROM node:20-alpine AS prod-deps
@@ -19,9 +20,8 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 
 FROM node:20-alpine AS runtime
+RUN corepack enable 
 WORKDIR /app
-RUN corepack enable
-
 RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont dumb-init
 
 ENV NODE_ENV=production

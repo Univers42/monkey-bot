@@ -10,5 +10,9 @@ pnpm-debug.log*
 .env.*
 .DS_Store
 vendor
+!vendor/
+vendor/*
+!vendor/libcss/
+!vendor/libcss/**
 coverage
 .vscode

@@ -3,12 +3,72 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>monkey-bot</title>
+    <title>Monkey Bot Login Lab</title>
   </head>
-  <body>
-    <main>
-      <h1>monkey-bot</h1>
-      <p>API docs are available at <a href="/docs">/docs</a>.</p>
+  <body class="login-lab-body">
+    <main class="login-lab-shell">
+      <section class="login-lab-brand">
+        <p class="login-lab-eyebrow">Monkey Bot</p>
+        <h1>Login Bot Testbed</h1>
+        <p>
+          Use this page to validate the <strong>login</strong> bot selectors and success detection.
+        </p>
+        <p>
+          API docs are available at <a href="/docs">/docs</a>.
+        </p>
+      </section>
+
+      <section class="login-lab-panel" aria-label="Login form test area">
+        <form id="login-form" class="prisma-auth-form" novalidate>
+          <div class="login-lab-heading">
+            <h2>Sign in</h2>
+            <p>Demo credentials: <code>demo-user</code> / <code>demo-pass</code></p>
+          </div>
+
+          <label class="login-lab-label" for="username">Username</label>
+          <div class="prisma-auth-input-wrapper">
+            <input
+              id="username"
+              name="username"
+              class="prisma-auth-input"
+              type="text"
+              autocomplete="username"
+              placeholder="demo-user"
+              required
+            />
+          </div>
+
+          <label class="login-lab-label" for="password">Password</label>
+          <div class="prisma-auth-input-wrapper">
+            <input
+              id="password"
+              name="password"
+              class="prisma-auth-input"
+              type="password"
+              autocomplete="current-password"
+              placeholder="demo-pass"
+              required
+            />
+          </div>
+
+          <button id="login-submit" class="prisma-btn prisma-btn--primary prisma-btn--block" type="submit">
+            Login
+          </button>
+
+          <p id="login-error" class="login-lab-error" role="alert" hidden>Invalid credentials. Try again.</p>
+        </form>
+
+        <article id="dashboard" class="login-lab-dashboard" data-test="dashboard" hidden>
+          <header>
+            <p class="login-lab-eyebrow">Success</p>
+            <h3>Authenticated Session</h3>
+          </header>
+          <p>
+            Login bot success selector reached.
+          </p>
+        </article>
+      </section>
     </main>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

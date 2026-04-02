@@ -16,7 +16,10 @@ module.exports = [
         ecmaVersion: "latest",
         sourceType: "module"
       },
-      globals: globals.node
+      globals: {
+        ...globals.node,
+        ...globals.browser
+      }
     },
     plugins: {
       "@typescript-eslint": tseslint

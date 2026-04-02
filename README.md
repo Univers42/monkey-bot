@@ -41,6 +41,10 @@ This uses a multi-stage Alpine-based build:
 - `POST /run` : runs the default bot (`smoke`)
 - `POST /run/:botId` : runs a specific bot
 
+Available bots right now:
+- `smoke`: generic page smoke diagnostics
+- `login`: login-flow scaffold (safe to run before login is implemented)
+
 Example request:
 
 ```bash
@@ -67,6 +71,47 @@ Example response:
 }
 ```
 
+Example login scaffold request:
+
+```bash
+curl -X POST http://localhost:3000/run/login \
+    -H "Content-Type: application/json" \
+    -d '{
+        "url": "https://example.com/login",
+        "username": "demo-user",
+        "password": "demo-pass",
+        "usernameSelector": "input[name=email]",
+        "passwordSelector": "input[name=password]",
+        "submitSelector": "button[type=submit]",
+        "successSelector": "[data-test=dashboard]",
+        "timeoutMs": 20000
+    }'
+```
+
+## Login page for bot testing
+
+This repo now includes a local login page built with the `vendor/libcss` submodule styles.
+
+- URL: `http://localhost:3000/login`
+- Demo credentials: `demo-user` / `demo-pass`
+- Built-in success selector: `[data-test=dashboard]`
+
+Example request against the local login page:
+
+```bash
+curl -X POST http://localhost:3000/run/login \
+    -H "Content-Type: application/json" \
+    -d '{
+        "url": "http://localhost:3000/login",
+        "username": "demo-user",
+        "password": "demo-pass",
+        "successSelector": "[data-test=dashboard]",
+        "timeoutMs": 20000
+    }'
+```
+
+If login does not exist yet, run the same request with only `url`. The bot will skip credential submission and still return navigation/network/console diagnostics.
+
 ## Bot architecture
 
 The project uses a bot registry/orchestrator model so multiple bots can live in the same repository with low coupling.
@@ -76,6 +121,10 @@ Current structure:
 ```text
 src/
     bots/
+        login/
+            index.ts      # bot metadata + contract implementation
+            schema.ts     # input parsing and validation
+            runner.ts     # Playwright login scaffold
         smoke/
             index.ts      # bot metadata + contract implementation
             schema.ts     # input parsing and validation
