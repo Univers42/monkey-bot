@@ -1,0 +1,104 @@
+:root {
+  --login-bg-1: #e2f5ec;
+  --login-bg-2: #fffbe9;
+  --login-ink: #1f2430;
+  --login-border: #b6d8c9;
+}
+
+body.login-lab-body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--login-ink);
+  background:
+    radial-gradient(circle at 12% 20%, rgb(255 255 255 / 70%), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgb(255 215 145 / 40%), transparent 30%),
+    linear-gradient(135deg, var(--login-bg-1), var(--login-bg-2));
+}
+
+.login-lab-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 2rem 1.25rem;
+}
+
+.login-lab-brand,
+.login-lab-panel {
+  width: min(38rem, 100%);
+  margin: 0 auto;
+}
+
+.login-lab-brand h1 {
+  margin: 0.3rem 0 0.8rem;
+  font-size: clamp(1.9rem, 3vw, 3rem);
+  line-height: 1.1;
+}
+
+.login-lab-eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--prisma-accent), #202020 30%);
+  font-weight: 700;
+}
+
+.login-lab-panel {
+  border: 1px solid var(--login-border);
+  border-radius: 1.25rem;
+  padding: 1.2rem;
+  backdrop-filter: blur(8px);
+  background: rgb(255 255 255 / 72%);
+  box-shadow: 0 14px 34px rgb(50 76 63 / 12%);
+}
+
+.login-lab-heading h2 {
+  margin: 0;
+  font-size: 1.55rem;
+}
+
+.login-lab-heading p {
+  margin: 0.2rem 0 0;
+  color: var(--prisma-text-secondary);
+}
+
+.login-lab-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--prisma-text-secondary);
+}
+
+.login-lab-error {
+  margin: 0;
+  color: var(--prisma-data-error);
+  font-size: 0.86rem;
+}
+
+.login-lab-dashboard {
+  margin-top: 1rem;
+  border-radius: 0.9rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--prisma-data-success), #fff 50%);
+  background: color-mix(in srgb, var(--prisma-data-success), #fff 92%);
+}
+
+.login-lab-dashboard h3 {
+  margin: 0.25rem 0 0;
+}
+
+@media (min-width: 920px) {
+  .login-lab-shell {
+    grid-template-columns: minmax(15rem, 30rem) minmax(18rem, 34rem);
+    justify-content: center;
+    gap: 2.5rem;
+    padding: 2.4rem;
+  }
+
+  .login-lab-brand,
+  .login-lab-panel {
+    width: 100%;
+    margin: 0;
+  }
+}

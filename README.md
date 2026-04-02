@@ -88,6 +88,28 @@ curl -X POST http://localhost:3000/run/login \
     }'
 ```
 
+## Login page for bot testing
+
+This repo now includes a local login page built with the `vendor/libcss` submodule styles.
+
+- URL: `http://localhost:3000/login`
+- Demo credentials: `demo-user` / `demo-pass`
+- Built-in success selector: `[data-test=dashboard]`
+
+Example request against the local login page:
+
+```bash
+curl -X POST http://localhost:3000/run/login \
+    -H "Content-Type: application/json" \
+    -d '{
+        "url": "http://localhost:3000/login",
+        "username": "demo-user",
+        "password": "demo-pass",
+        "successSelector": "[data-test=dashboard]",
+        "timeoutMs": 20000
+    }'
+```
+
 If login does not exist yet, run the same request with only `url`. The bot will skip credential submission and still return navigation/network/console diagnostics.
 
 ## Bot architecture

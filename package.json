@@ -28,6 +28,7 @@
     "@typescript-eslint/parser": "^8.30.1",
     "eslint": "^9.25.1",
     "globals": "^16.0.0",
+    "sass": "^1.98.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
