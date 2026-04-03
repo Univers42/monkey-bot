@@ -16,3 +16,7 @@ vendor/*
 !vendor/libcss/**
 coverage
 .vscode
+artifacts
+reports
+projects/*/artifacts
+projects/*/reports

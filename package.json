@@ -9,10 +9,13 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "start": "vite preview --host 0.0.0.0",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "docker:qa:build": "docker compose --profile qa build qa-runner",
+    "docker:qa:wave-1": "docker compose --profile qa run --rm qa-runner run --project notion-like --suite wave-1 --env local",
+    "lint": "eslint \"src/**/*.ts\" \"browser.ts\" \"cli.ts\" \"core.ts\" \"reporters.ts\" \"projects/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" \"browser.ts\" \"cli.ts\" \"core.ts\" \"reporters.ts\" \"projects/**/*.ts\" --fix",
     "typecheck": "tsc --noEmit",
-    "audit": "npm audit"
+    "audit": "npm audit",
+    "qa-bots": "tsx cli.ts"
   },
   "engines": {
     "node": ">=20"

@@ -1,5 +1,5 @@
 services:
-  monkey-bot:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,3 +15,25 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+  qa-runner:
+    build:
+      context: .
+      dockerfile: docker/images/qa-runner/Dockerfile
+    env_file:
+      - .env
+    environment:
+      QA_NOTION_BASE_URL: ${QA_NOTION_BASE_URL:-http://host.docker.internal:3002}
+      ARTIFACTS_DIR: /app/artifacts
+      REPORTS_DIR: /app/reports
+      PLAYWRIGHT_DOCKER: "1"
+    volumes:
+      - ./artifacts:/app/artifacts
+      - ./reports:/app/reports
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      app:
+        condition: service_healthy
+    init: true
+    profiles:
+      - qa

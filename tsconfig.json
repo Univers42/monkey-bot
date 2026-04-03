@@ -3,13 +3,22 @@
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "Node",
+    "allowImportingTsExtensions": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "browser.ts",
+    "cli.ts",
+    "core.ts",
+    "reporters.ts",
+    "projects/**/*.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

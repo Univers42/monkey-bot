@@ -9,7 +9,7 @@ module.exports = [
   },
   js.configs.recommended,
   {
-    files: ["src/**/*.ts"],
+    files: ["src/**/*.ts", "browser.ts", "cli.ts", "core.ts", "reporters.ts", "projects/**/*.ts"],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
