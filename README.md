@@ -32,20 +32,20 @@ The repository also ships a `Makefile` for common local and Docker workflows.
 Common local commands:
 
 ```bash
-make install
-make test
-make qa-doctor
-make qa-wave-1
-make qa-run-scenario SCENARIO=login-success
+make install                                   # install dependencies and create .env if needed
+make test                                      # run lint and typecheck
+make qa-doctor                                 # validate the local QA target and browser setup
+make qa-wave-1                                 # run the default wave-1 suite locally
+make qa-run-scenario SCENARIO=login-success    # run one local QA scenario
 ```
 
 Common Docker commands:
 
 ```bash
-make docker-images
-make docker-qa-doctor
-make docker-qa-wave-1
-make docker-qa-scenario SCENARIO=shared-document-permissions CONCURRENCY=coordinated ACTORS=2
+make docker-images                                                                   # build the app image and the qa-runner image
+make docker-qa-doctor                                                                # validate the QA environment from inside the qa-runner container
+make docker-qa-wave-1                                                                # run the default wave-1 suite in Docker
+make docker-qa-scenario SCENARIO=shared-document-permissions CONCURRENCY=coordinated ACTORS=2  # run one Docker QA scenario with explicit concurrency
 ```
 
 Useful variables:
