@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>mutant-control: escaped-echo</title>
+  </head>
+  <body>
+    <h1>Control — escaped echo</h1>
+    <p>Safe sink: query <code>q</code> is written with <code>textContent</code>.</p>
+    <form id="probe-form" action="" method="get">
+      <label for="q">q</label>
+      <input id="q" name="q" type="text" />
+      <button type="submit">Submit</button>
+    </form>
+    <div id="out"></div>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const q = params.get("q") || "";
+      document.getElementById("q").value = q;
+      document.getElementById("out").textContent = q;
+    </script>
+  </body>
+</html>
