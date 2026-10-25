@@ -13,6 +13,7 @@ do not report target positives.
 pnpm install
 cp .env.example .env
 cp config/targets.example.json config/targets.local.json   # edit real org URLs here
+pnpm test
 pnpm run dev
 ```
 
