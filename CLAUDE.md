@@ -36,6 +36,8 @@ Every finding must survive the Google mutation-testing discipline:
   (see devil `rules/risk.md`).
 - **One commit per file** — when asked to commit, one path per commit; never
   bundle. Commit only on explicit user request.
+- **Tests per feature** — implement tests with each feature; security probes
+  assert mutant calibration. Untested features are not done.
 
 <!-- devil:start -->
 ## The devil kit
