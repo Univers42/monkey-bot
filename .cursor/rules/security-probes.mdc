@@ -1,0 +1,16 @@
+---
+description: Rules for writing form/input security probes and mutant fixtures
+globs: src/bots/**/*.{ts,tsx},**/mutants/**/*,**/fixtures/**/*
+alwaysApply: false
+---
+
+# Security probes
+
+- Map the untrusted edge (form fields, query, headers, uploads) before probing.
+- Pair every probe with a **mutant fixture** that embeds the fault class under
+  test; CI/local runs must kill that mutant or the probe is not ready.
+- Prefer observable effects: script execution, reflected raw HTML, SQL/error
+  oracle, privilege change, unexpected redirect — not generic 500s alone.
+- Keep payloads and oracles in code next to the bot; do not rely on manual
+  scanner dumps as findings.
+- AuthN/AuthZ checks: identity from credential, never from a client-supplied id.
