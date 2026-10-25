@@ -73,6 +73,42 @@ export const openApiDocument = {
         }
       }
     },
+    "/targets": {
+      get: {
+        summary: "List configured target URLs",
+        description: "Reads config/targets.json merged with config/targets.local.json",
+        responses: {
+          200: {
+            description: "Configured targets",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    targets: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string", example: "local-app" },
+                          url: { type: "string", format: "uri" },
+                          description: { type: "string" }
+                        },
+                        required: ["id", "url"]
+                      }
+                    }
+                  },
+                  required: ["targets"]
+                }
+              }
+            }
+          },
+          500: {
+            description: "Targets config missing or invalid"
+          }
+        }
+      }
+    },
     "/run": {
       post: {
         summary: "Run the default bot (smoke)",
@@ -88,6 +124,11 @@ export const openApiDocument = {
                     format: "uri",
                     example: "https://example.com"
                   },
+                  targetId: {
+                    type: "string",
+                    example: "local-app",
+                    description: "Named target from config/targets.json"
+                  },
                   waitForSelector: {
                     type: "string",
                     example: "h1"
@@ -97,8 +138,7 @@ export const openApiDocument = {
                     minimum: 1,
                     example: 20000
                   }
-                },
-                required: ["url"]
+                }
               }
             }
           }
@@ -181,10 +221,10 @@ export const openApiDocument = {
                     description: "smoke bot",
                     properties: {
                       url: { type: "string", format: "uri" },
+                      targetId: { type: "string", example: "local-app" },
                       waitForSelector: { type: "string" },
                       timeoutMs: { type: "integer", minimum: 1 }
-                    },
-                    required: ["url"]
+                    }
                   },
                   {
                     type: "object",
@@ -193,7 +233,12 @@ export const openApiDocument = {
                       url: {
                         type: "string",
                         format: "uri",
-                        description: "Target page; omit when calibrateOnly is true"
+                        description: "Target page; omit when using targetId or calibrateOnly"
+                      },
+                      targetId: {
+                        type: "string",
+                        example: "local-app",
+                        description: "Named target from config/targets.json"
                       },
                       formSelector: { type: "string", example: "form" },
                       fieldSelector: {
