@@ -3,7 +3,8 @@ export const openApiDocument = {
   info: {
     title: "monkey-bot API",
     version: "1.0.0",
-    description: "Playwright bot server for browser checks and security automation"
+    description:
+      "Authorized security-testing bots for Univers42 apps (smoke checks, form XSS probes with Google mutants calibration)"
   },
   servers: [
     {
@@ -54,7 +55,7 @@ export const openApiDocument = {
                         properties: {
                           id: {
                             type: "string",
-                            example: "smoke"
+                            example: "form-xss"
                           },
                           description: {
                             type: "string"
@@ -166,7 +167,7 @@ export const openApiDocument = {
             schema: {
               type: "string"
             },
-            example: "smoke"
+            example: "form-xss"
           }
         ],
         requestBody: {
@@ -174,24 +175,41 @@ export const openApiDocument = {
           content: {
             "application/json": {
               schema: {
-                type: "object",
-                properties: {
-                  url: {
-                    type: "string",
-                    format: "uri",
-                    example: "https://example.com"
+                oneOf: [
+                  {
+                    type: "object",
+                    description: "smoke bot",
+                    properties: {
+                      url: { type: "string", format: "uri" },
+                      waitForSelector: { type: "string" },
+                      timeoutMs: { type: "integer", minimum: 1 }
+                    },
+                    required: ["url"]
                   },
-                  waitForSelector: {
-                    type: "string",
-                    example: "h1"
-                  },
-                  timeoutMs: {
-                    type: "integer",
-                    minimum: 1,
-                    example: 20000
+                  {
+                    type: "object",
+                    description: "form-xss bot",
+                    properties: {
+                      url: {
+                        type: "string",
+                        format: "uri",
+                        description: "Target page; omit when calibrateOnly is true"
+                      },
+                      formSelector: { type: "string", example: "form" },
+                      fieldSelector: {
+                        type: "string",
+                        example: "input[name=q]"
+                      },
+                      submitSelector: { type: "string", example: "button[type=submit]" },
+                      timeoutMs: { type: "integer", minimum: 1, example: 20000 },
+                      calibrateOnly: {
+                        type: "boolean",
+                        example: true,
+                        description: "Run mutant calibration only"
+                      }
+                    }
                   }
-                },
-                required: ["url"]
+                ]
               }
             }
           }
@@ -204,36 +222,8 @@ export const openApiDocument = {
                 schema: {
                   type: "object",
                   properties: {
-                    ok: {
-                      type: "boolean",
-                      example: true
-                    },
-                    result: {
-                      type: "object",
-                      properties: {
-                        title: {
-                          type: "string",
-                          example: "Example Domain"
-                        },
-                        finalUrl: {
-                          type: "string",
-                          example: "https://example.com/"
-                        },
-                        consoleErrors: {
-                          type: "array",
-                          items: {
-                            type: "string"
-                          }
-                        },
-                        failedRequests: {
-                          type: "array",
-                          items: {
-                            type: "string"
-                          }
-                        }
-                      },
-                      required: ["title", "finalUrl", "consoleErrors", "failedRequests"]
-                    }
+                    ok: { type: "boolean", example: true },
+                    result: { type: "object" }
                   },
                   required: ["ok", "result"]
                 }
