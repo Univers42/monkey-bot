@@ -167,3 +167,7 @@ dist
 .claude/cache/
 .claude/devil.env
 .scratch/
+
+# Local org target URLs (copy from config/targets.example.json)
+config/targets.local.json
+
