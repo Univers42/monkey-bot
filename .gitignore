@@ -164,3 +164,6 @@ dist
 .env
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,node,dotenv
+.claude/cache/
+.claude/devil.env
+.scratch/
