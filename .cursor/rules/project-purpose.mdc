@@ -1,0 +1,27 @@
+---
+description: monkey-bot purpose — org security testing with Google mutants
+alwaysApply: true
+---
+
+# Project purpose
+
+This repo builds **authorized security-testing bots/scripts** for Univers42
+organization projects: validate form and other untrusted inputs, and try to
+break insecure handling. Targets are **org-owned apps and local fixtures only**.
+
+## Google mutants (required — kills false positives)
+
+1. Seed small known faults (mutants) in controlled fixtures.
+2. A probe is valid only if it **kills** those mutants.
+3. Report a target finding only when the probe kills the matching mutant **and**
+   the target shows the same observable effect.
+4. Suppress arid mutants (logs, copy, unreachable code).
+5. No evidence path → hypothesis, not a finding (`UNKNOWN = FAIL`).
+
+## How to extend
+
+- New bots: `src/bots/<id>/{index,schema,runner}.ts` + register in
+  `src/orchestrator/registry.ts`.
+- Prefer evidence (payload + response) over narrative.
+- Devil kit rules: `.claude/rules/devil/`. Mandate detail: root `AGENTS.md` and
+  `CLAUDE.md`.
