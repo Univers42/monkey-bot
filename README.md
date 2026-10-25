@@ -11,6 +11,8 @@ do not report target positives.
 
 ```bash
 pnpm install
+cp .env.example .env
+cp config/targets.example.json config/targets.local.json   # edit real org URLs here
 pnpm run dev
 ```
 
@@ -20,12 +22,42 @@ Server: `http://localhost:3000`. Docs: `GET /docs`.
 docker compose up --build
 ```
 
+## Target URLs
+
+Named targets live under `config/`:
+
+| File | Role |
+| --- | --- |
+| `config/targets.example.json` | Documented template (committed) |
+| `config/targets.json` | Default targets (committed placeholders) |
+| `config/targets.local.json` | Local overrides for real org URLs (**gitignored**) |
+
+Optional env: `MONKEY_BOT_TARGETS_FILE` (path to a JSON file). When unset,
+`targets.json` is loaded and merged with `targets.local.json` if present.
+
+List configured targets:
+
+```bash
+curl -s http://localhost:3000/targets
+```
+
+Run a bot by target id:
+
+```bash
+curl -s -X POST http://localhost:3000/run/form-xss \
+  -H "Content-Type: application/json" \
+  -d '{"targetId": "local-app"}'
+```
+
+Request-body `url` / selectors override the named target when both are set.
+
 ## API
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Health probe |
 | `GET` | `/bots` | List bots |
+| `GET` | `/targets` | List configured target URLs |
 | `POST` | `/run` | Run default bot (`smoke`) |
 | `POST` | `/run/:botId` | Run a specific bot |
 
@@ -54,9 +86,7 @@ target findings are suppressed (`UNKNOWN = FAIL`).
 curl -s -X POST http://localhost:3000/run/form-xss \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "http://localhost:3000/../path-to-org-app",
-    "formSelector": "form",
-    "fieldSelector": "input[name=q]",
+    "targetId": "local-app",
     "timeoutMs": 20000
   }'
 ```
@@ -69,15 +99,20 @@ A finding is reported only when:
 ## Layout
 
 ```text
+config/
+  targets.example.json
+  targets.json
+  targets.local.json   # gitignored local overrides
 src/
+  config/targets.ts    # loader + resolveTarget
   bots/
-    smoke/           # smoke bot
-    form-xss/        # XSS probe + mutant gate
+    smoke/
+    form-xss/
   mutants/
-    fixtures/        # seeded faults + controls (HTML)
+    fixtures/
     catalog.ts
   lib/chromium.ts
-  orchestrator/      # registry + runBot
+  orchestrator/
 ```
 
 ### Add a bot
