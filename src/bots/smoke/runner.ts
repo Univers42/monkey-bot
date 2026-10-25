@@ -1,6 +1,5 @@
-import { chromium } from "playwright-core";
-import { existsSync } from "node:fs";
 import type { SmokeBotInput } from "./schema";
+import { launchChromium } from "../../lib/chromium";
 
 export type SmokeBotResult = {
   title: string;
@@ -11,31 +10,12 @@ export type SmokeBotResult = {
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
-function resolveChromiumPath(): string {
-  if (process.env.CHROMIUM_PATH) {
-    return process.env.CHROMIUM_PATH;
-  }
-
-  const candidates = ["/usr/bin/chromium-browser", "/usr/bin/chromium"];
-  for (const path of candidates) {
-    if (existsSync(path)) {
-      return path;
-    }
-  }
-
-  return "/usr/bin/chromium-browser";
-}
-
 export async function runSmokeBot(input: SmokeBotInput): Promise<SmokeBotResult> {
   const timeout = input.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const consoleErrors: string[] = [];
   const failedRequests: string[] = [];
 
-  const browser = await chromium.launch({
-    executablePath: resolveChromiumPath(),
-    headless: true,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"]
-  });
+  const browser = await launchChromium();
 
   try {
     const context = await browser.newContext();
