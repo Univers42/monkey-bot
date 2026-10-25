@@ -6,6 +6,8 @@ services:
     container_name: monkey-bot
     env_file:
       - .env
+    volumes:
+      - ./config:/app/config:ro
     ports:
       - "${PORT:-3000}:3000"
     restart: unless-stopped
