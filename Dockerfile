@@ -35,6 +35,7 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY package.json pnpm-lock.yaml vite.config.ts ./
 COPY src ./src
+COPY config ./config
 
 USER app
 EXPOSE 3000
