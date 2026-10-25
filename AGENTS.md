@@ -31,9 +31,12 @@ a **bot**, or a **mutant fixture** that makes security claims trustworthy.
 6. **One commit per file** — when asked to commit, stage and commit exactly
    one file per commit; never bundle multiple paths. Commit only when the
    user explicitly asks.
+7. **Tests per feature** — every new or extended feature ships tests that
+   cover its behavior (happy path + important failures). Security probes
+   assert mutant calibration. A feature without tests is not done.
 
 ## Cursor-specific
 
 Project rules under `.cursor/rules/` with `alwaysApply: true` restate the
-purpose, mutant gate, and commit policy for every new Cursor conversation.
-Keep them in sync with this file when the mandate changes.
+purpose, mutant gate, commit policy, and test policy for every new Cursor
+conversation. Keep them in sync with this file when the mandate changes.
