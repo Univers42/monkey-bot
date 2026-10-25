@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>arid-mutant: log-only</title>
+  </head>
+  <body>
+    <h1>Arid mutant — log only</h1>
+    <p>Noise: payload is logged, never sinks into HTML/JS execution.</p>
+    <form id="probe-form" action="" method="get">
+      <label for="q">q</label>
+      <input id="q" name="q" type="text" />
+      <button type="submit">Submit</button>
+    </form>
+    <div id="out">ok</div>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const q = params.get("q") || "";
+      document.getElementById("q").value = q;
+      // ARID: console noise is not a security sink
+      console.log("echo", q);
+    </script>
+  </body>
+</html>
