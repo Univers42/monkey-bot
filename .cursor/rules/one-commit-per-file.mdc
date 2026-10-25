@@ -1,0 +1,15 @@
+---
+description: Create one git commit per modified file
+alwaysApply: true
+---
+
+# One commit per file
+
+When the user asks to commit:
+
+1. Stage and commit **exactly one file** per commit.
+2. Repeat until every intended file has its own commit.
+3. Message focuses on **why** that file changed; name the file when useful.
+4. Never bundle unrelated files. A rename/move that git records as delete+add
+   of the same path may share one commit; otherwise still one path per commit.
+5. Do not commit unless the user explicitly asked.
