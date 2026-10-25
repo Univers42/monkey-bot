@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv, Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { resolve } from "node:path";
+import { listTargetSummaries } from "./src/config/targets";
 import { BotInputValidationError, BotNotFoundError } from "./src/orchestrator/errors";
 import { listBots, runBotById } from "./src/orchestrator/runBot";
 import { openApiDocument } from "./src/swagger";
@@ -113,6 +114,18 @@ function apiPlugin(): Plugin {
       return;
     }
 
+    if (method === "GET" && normalizedPath === "/targets") {
+      try {
+        sendJson(res, 200, {
+          targets: listTargetSummaries()
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load targets";
+        sendJson(res, 500, { ok: false, error: message });
+      }
+      return;
+    }
+
     if (method === "GET" && normalizedPath === "/docs/openapi.json") {
       sendJson(res, 200, openApiDocument);
       return;
@@ -180,6 +193,9 @@ export default defineConfig(({ mode }) => {
   process.env.PORT = String(port);
   process.env.CHROMIUM_PATH = env.CHROMIUM_PATH || process.env.CHROMIUM_PATH || "/usr/bin/chromium-browser";
   process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD || process.env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD || "1";
+  if (env.MONKEY_BOT_TARGETS_FILE) {
+    process.env.MONKEY_BOT_TARGETS_FILE = env.MONKEY_BOT_TARGETS_FILE;
+  }
 
   return {
     plugins: [apiPlugin()],
