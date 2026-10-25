@@ -1,175 +1,94 @@
 # monkey-bot
-This project main's goal is to create a bot to automate testing and security issues for the rest of our projects
 
-## Quick start (TypeScript + Playwright + Docker)
+Authorized **security-testing bots** for Univers42 organization projects.
 
-This project now uses Vite as the server runtime (dev and production preview).
+Bots exercise form and other untrusted inputs, and try to break insecure
+handling — only against org-owned apps and local mutant fixtures. Findings
+use the **Google mutants** discipline so probes that cannot kill seeded faults
+do not report target positives.
 
-Project runtime values are loaded from .env for the server port and Chromium path.
-
-### 1. Install dependencies locally
+## Quick start
 
 ```bash
 pnpm install
-```
-
-### 2. Run in development mode
-
-```bash
 pnpm run dev
 ```
 
-Server runs on `http://localhost:3000`.
-
-### 3. Build and run with Docker
+Server: `http://localhost:3000`. Docs: `GET /docs`.
 
 ```bash
 docker compose up --build
 ```
 
-This uses a multi-stage Alpine-based build:
-- `deps` stage for full dependency installation
-- `build` stage for TypeScript compilation
-- `prod-deps` stage for production-only dependencies
-- `runtime` stage with a non-root user and system Chromium for Playwright
+## API
 
-### 4. API endpoints
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Health probe |
+| `GET` | `/bots` | List bots |
+| `POST` | `/run` | Run default bot (`smoke`) |
+| `POST` | `/run/:botId` | Run a specific bot |
 
-- Swagger UI: `GET /docs`
-- `GET /health` : health probe
-- `GET /bots` : lists available bots
-- `POST /run` : runs the default bot (`smoke`)
-- `POST /run/:botId` : runs a specific bot
+### Bots
 
-Example request:
+| id | Role |
+| --- | --- |
+| `smoke` | Browser smoke check (title, console errors, failed requests) |
+| `form-xss` | Reflected XSS form probe with mutant calibration |
+
+### `form-xss` — calibrate only
 
 ```bash
-curl -X POST http://localhost:3000/run/smoke \
-    -H "Content-Type: application/json" \
-    -d '{
-        "url": "https://example.com",
-        "waitForSelector": "h1",
-        "timeoutMs": 20000
-    }'
+curl -s -X POST http://localhost:3000/run/form-xss \
+  -H "Content-Type: application/json" \
+  -d '{"calibrateOnly": true}'
 ```
 
-Example response:
+Calibration must **kill** `reflected-xss`, leave `escaped-echo` alone, and treat
+`arid-log-only` as noise. If calibration fails, `probeTrusted` is false and
+target findings are suppressed (`UNKNOWN = FAIL`).
 
-```json
-{
-    "ok": true,
-    "result": {
-        "title": "Example Domain",
-        "finalUrl": "https://example.com/",
-        "consoleErrors": [],
-        "failedRequests": []
-    }
-}
+### `form-xss` — target + mutants
+
+```bash
+curl -s -X POST http://localhost:3000/run/form-xss \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "http://localhost:3000/../path-to-org-app",
+    "formSelector": "form",
+    "fieldSelector": "input[name=q]",
+    "timeoutMs": 20000
+  }'
 ```
 
-## Bot architecture
+A finding is reported only when:
 
-The project uses a bot registry/orchestrator model so multiple bots can live in the same repository with low coupling.
+1. the must-kill mutant was killed, and
+2. the target shows the same oracle (`window.__MB_XSS__ === token`).
 
-Current structure:
+## Layout
 
 ```text
 src/
-    bots/
-        smoke/
-            index.ts      # bot metadata + contract implementation
-            schema.ts     # input parsing and validation
-            runner.ts     # Playwright logic
-    orchestrator/
-        errors.ts       # typed orchestration errors
-        registry.ts     # bot registration map
-        runBot.ts       # listBots + runBotById
-        types.ts        # shared bot contract
+  bots/
+    smoke/           # smoke bot
+    form-xss/        # XSS probe + mutant gate
+  mutants/
+    fixtures/        # seeded faults + controls (HTML)
+    catalog.ts
+  lib/chromium.ts
+  orchestrator/      # registry + runBot
 ```
 
-To add a new bot:
+### Add a bot
 
-1. Create `src/bots/<your-bot>/index.ts`, `schema.ts`, and `runner.ts`.
-1. Register it in `src/orchestrator/registry.ts`.
-1. Call it with `POST /run/<your-bot-id>`.
+1. Create `src/bots/<id>/{index,schema,runner}.ts`.
+2. Pair it with a mutant fixture under `src/mutants/fixtures/` when it makes
+   security claims.
+3. Register it in `src/orchestrator/registry.ts`.
+4. Call `POST /run/<id>`.
 
+## Agent rules
 
-# 1. Browser automation
-## Tools
-- Plawright (recommended starting point by AI)
-- Puppeteer
-- Selenium
-
-## What to learn
-- Opening pages
-- Clicking buttons / filling forms
-- Waiting for elements
-- Handling authentication flows
-
-# 2. Frontend testing concepts
-## Key ideas
-- End to end (E2E) testing
-- Assertions
-- Test runners
-## Tools
-- Playwright Test
-- Cypress
-
-# 3. Error detection
-## What bot should do
-- Detect broken UI flows
-- Catch JS errors
-- Identify missing elements or failed requests
-## Learn
-- Capturing console errors
-- Monitoring network requests
-- Handling timeouts and failures
-
-# 4. Security testing (this is a separate skill)
-## Basics
-- OWASP Top 10 (must-know vulnerabilities)
-- XSS (cross-site scripting)
-- SQL injection
-- CSRF
-- Authentication flaws
-## Tools
-- OWASP ZAP (great beginner-friendly scanner)
-- Burp Suite
-## What bot can do
-- Inject payloads into forms
-- Check if scripts execute (XSS)
-- Detect insecure headers
-- Crawl pages for vulnerabilities
-
-# 5. Combine automation + security
-## Use Playwright to:
-- Navigate and interact with the app
-- Integrate:
-- Security payloads (e.g., test inputs)
-- External scanners (ZAP API)
-## Example idea
-- Bot logs into Notion-like app
-- Creates pages with malicious inputs
-- Checks if anything breaks or executes unexpectedly
-
-# 6. Suggested learning path (simple roadmap)
-1. Learn Playwright (automate a login + form)
-1. Add assertions (test results)
-1. Capture errors (console + network)
-1. Study OWASP Top 10
-1. Try OWASP ZAP manually
-1. Integrate security tests into your bot
-
-# 7. A realistic first project (MVP)
-- Opens your app
-- Logs in
-- Creates a page
-- Inputs weird/malicious text
-- Checks:
-    - Did it crash?
-    - Did scripts run?
-    - Any console errors?
-
-# 8. Programming Languages
-- TypeScript for frontend interaction and testing
-- Python for security research scripts
+Cursor/Claude always-on guidance lives in `AGENTS.md`, `CLAUDE.md`, and
+`.cursor/rules/`. Devil kit rules are seeded under `.claude/rules/devil/`.
