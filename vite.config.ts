@@ -5,11 +5,7 @@ import { BotInputValidationError, BotNotFoundError } from "./src/orchestrator/er
 import { listBots, runBotById } from "./src/orchestrator/runBot";
 import { openApiDocument } from "./src/swagger";
 
-type RunBody = {
-  url?: string;
-  waitForSelector?: string;
-  timeoutMs?: number;
-};
+type RunBody = Record<string, unknown>;
 
 const DEFAULT_BOT_ID = "smoke";
 
