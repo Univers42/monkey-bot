@@ -1,0 +1,16 @@
+{
+  "defaults": {
+    "timeoutMs": 20000
+  },
+  "targets": {
+    "local-app": {
+      "url": "http://localhost:5173/",
+      "description": "Local Univers42 app under test",
+      "formSelector": "form",
+      "fieldSelector": "input[type='text'], input:not([type]), textarea",
+      "submitSelector": "button[type='submit'], input[type='submit'], button",
+      "waitForSelector": "form",
+      "timeoutMs": 20000
+    }
+  }
+}
