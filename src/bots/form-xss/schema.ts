@@ -1,8 +1,11 @@
+import { resolveTarget } from "../../config/targets";
 import { BotInputValidationError } from "../../orchestrator/errors";
 
 export type FormXssBotInput = {
-  /** Target page URL. Omit (or set calibrateOnly) to run mutant calibration only. */
+  /** Target page URL. Omit when using targetId or calibrateOnly. */
   url?: string;
+  /** Named target from config/targets.json (and optional targets.local.json). */
+  targetId?: string;
   formSelector?: string;
   fieldSelector?: string;
   submitSelector?: string;
@@ -30,29 +33,43 @@ export function parseFormXssBotInput(input: unknown): FormXssBotInput {
     throw new BotInputValidationError("Request body must be a JSON object");
   }
 
-  const url = optionalString("url", input.url);
-  const formSelector = optionalString("formSelector", input.formSelector);
-  const fieldSelector = optionalString("fieldSelector", input.fieldSelector);
-  const submitSelector = optionalString("submitSelector", input.submitSelector);
-
-  const timeoutMs = input.timeoutMs;
-  if (timeoutMs !== undefined) {
-    if (typeof timeoutMs !== "number" || !Number.isInteger(timeoutMs) || timeoutMs < 1) {
-      throw new BotInputValidationError("Field timeoutMs must be an integer >= 1");
-    }
-  }
-
   const calibrateOnly = input.calibrateOnly;
   if (calibrateOnly !== undefined && typeof calibrateOnly !== "boolean") {
     throw new BotInputValidationError("Field calibrateOnly must be a boolean");
   }
 
+  let url = optionalString("url", input.url);
+  const targetId = optionalString("targetId", input.targetId);
+  let formSelector = optionalString("formSelector", input.formSelector);
+  let fieldSelector = optionalString("fieldSelector", input.fieldSelector);
+  let submitSelector = optionalString("submitSelector", input.submitSelector);
+
+  let timeoutMs: number | undefined;
+  if (input.timeoutMs !== undefined) {
+    if (typeof input.timeoutMs !== "number" || !Number.isInteger(input.timeoutMs) || input.timeoutMs < 1) {
+      throw new BotInputValidationError("Field timeoutMs must be an integer >= 1");
+    }
+    timeoutMs = input.timeoutMs;
+  }
+
+  if (targetId) {
+    const target = resolveTarget(targetId);
+    url = url ?? target.url;
+    formSelector = formSelector ?? target.formSelector;
+    fieldSelector = fieldSelector ?? target.fieldSelector;
+    submitSelector = submitSelector ?? target.submitSelector;
+    timeoutMs = timeoutMs ?? target.timeoutMs;
+  }
+
   if (!calibrateOnly && url === undefined) {
-    throw new BotInputValidationError("Missing required field: url (or set calibrateOnly: true)");
+    throw new BotInputValidationError(
+      "Provide url, targetId, or set calibrateOnly: true (see config/targets.example.json)"
+    );
   }
 
   return {
     url,
+    targetId,
     formSelector,
     fieldSelector,
     submitSelector,
