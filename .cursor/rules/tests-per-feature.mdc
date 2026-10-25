@@ -1,0 +1,22 @@
+---
+description: Add tests for each newly implemented feature
+alwaysApply: true
+---
+
+# Tests per feature
+
+When implementing or extending a feature, ship tests in the same change set.
+
+1. **Every feature needs tests** that exercise the new behavior (happy path +
+   important failure / edge cases). A feature without tests is not done.
+2. **Colocate** tests next to the code when practical
+   (`*.test.ts` / `*.spec.ts` beside the module, or under a nearby `__tests__/`).
+3. **Security probes** must include mutant calibration assertions (must-kill
+   killed, controls survive, arid noise suppressed) — not only target checks.
+4. **Config / schema / pure logic** get unit tests; browser paths get focused
+   integration tests when Chromium is available.
+5. Prefer the repo's existing test runner (`pnpm test` / configured framework).
+   If none exists yet, add a minimal Node/TypeScript runner rather than leaving
+   the feature untested.
+6. Run the new tests before calling the work complete; report failures, do not
+   claim green without running them.
