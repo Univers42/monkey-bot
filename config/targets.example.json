@@ -12,12 +12,34 @@
       "waitForSelector": "form",
       "timeoutMs": 20000
     },
+    "mutant-lab-reflected-xss": {
+      "url": "mutant:reflected-xss.html",
+      "description": "Baseline lab target: seeded reflected XSS mutant",
+      "formSelector": "form",
+      "fieldSelector": "#q",
+      "submitSelector": "button[type='submit']"
+    },
+    "mutant-lab-attr-xss": {
+      "url": "mutant:attr-xss.html",
+      "description": "Baseline lab target: seeded attribute XSS mutant",
+      "formSelector": "form",
+      "fieldSelector": "#q",
+      "submitSelector": "button[type='submit']"
+    },
     "staging-app": {
       "url": "https://staging.example.univers42/",
-      "description": "Staging Univers42 app (replace with a real org URL)",
+      "description": "Staging Univers42 app — copy to targets.local.json and set a real org URL",
       "formSelector": "form",
       "fieldSelector": "input[name='q']",
-      "submitSelector": "button[type='submit']"
+      "submitSelector": "button[type='submit']",
+      "auth": {
+        "loginUrl": "https://staging.example.univers42/login",
+        "usernameSelector": "input[name='email']",
+        "passwordSelector": "input[name='password']",
+        "submitSelector": "button[type='submit']",
+        "usernameEnv": "MONKEY_BOT_TARGET_USER",
+        "passwordEnv": "MONKEY_BOT_TARGET_PASSWORD"
+      }
     }
   }
 }
