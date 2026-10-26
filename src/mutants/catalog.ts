@@ -1,7 +1,6 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-
-export type FaultClass = "reflected-xss";
+import type { FaultClass } from "../findings/types";
 
 export type MutantExpectation = "must-kill" | "must-survive" | "arid";
 
@@ -35,10 +34,28 @@ export const MUTANT_FIXTURES: readonly MutantFixture[] = [
     fileName: "arid-log-only.html",
     expectation: "arid",
     description: "Arid mutant: console.log only — suppress as a finding signal"
+  },
+  {
+    id: "attr-xss",
+    faultClass: "attr-xss",
+    fileName: "attr-xss.html",
+    expectation: "must-kill",
+    description: "Unsanitized reflection into an HTML attribute value"
+  },
+  {
+    id: "attr-escaped",
+    faultClass: "attr-xss",
+    fileName: "attr-escaped.html",
+    expectation: "must-survive",
+    description: "Negative control: attribute value is HTML-escaped"
   }
 ] as const;
 
 export function fixtureFileUrl(fileName: string): string {
   const absolute = join(process.cwd(), "src/mutants/fixtures", fileName);
   return pathToFileURL(absolute).href;
+}
+
+export function fixturesDir(): string {
+  return join(process.cwd(), "src/mutants/fixtures");
 }
