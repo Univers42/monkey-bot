@@ -32,7 +32,9 @@ describe("parseFormXssBotInput", () => {
       fieldSelector: undefined,
       submitSelector: undefined,
       timeoutMs: undefined,
-      calibrateOnly: true
+      calibrateOnly: true,
+      writeArtifact: undefined,
+      auth: undefined
     });
   });
 
