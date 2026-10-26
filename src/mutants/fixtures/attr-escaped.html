@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>mutant-control: attr-escaped</title>
+  </head>
+  <body>
+    <h1>Control — escaped attribute</h1>
+    <p>Safe sink: query <code>q</code> is HTML-escaped before attribute use.</p>
+    <form id="probe-form" action="" method="get">
+      <label for="q">q</label>
+      <input id="q" name="q" type="text" />
+      <button type="submit">Submit</button>
+    </form>
+    <div id="out"></div>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const q = params.get("q") || "";
+      document.getElementById("q").value = q;
+      const escaped = q
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      document.getElementById("out").innerHTML = '<input id="sink" value="' + escaped + '">';
+    </script>
+  </body>
+</html>
