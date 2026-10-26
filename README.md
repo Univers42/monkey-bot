@@ -12,8 +12,9 @@ do not report target positives.
 ```bash
 pnpm install
 cp .env.example .env
-cp config/targets.example.json config/targets.local.json   # edit real org URLs here
+cp config/targets.local.json.example config/targets.local.json   # edit real org URLs
 pnpm test
+pnpm test:calibration   # requires Chromium; hard mutant gate
 pnpm run dev
 ```
 
@@ -25,32 +26,29 @@ docker compose up --build
 
 ## Target URLs
 
-Named targets live under `config/`:
-
 | File | Role |
 | --- | --- |
 | `config/targets.example.json` | Documented template (committed) |
-| `config/targets.json` | Default targets (committed placeholders) |
-| `config/targets.local.json` | Local overrides for real org URLs (**gitignored**) |
+| `config/targets.json` | Default targets including mutant-lab baselines |
+| `config/targets.local.json.example` | Template for real org URLs + auth |
+| `config/targets.local.json` | Local overrides (**gitignored**) |
 
-Optional env: `MONKEY_BOT_TARGETS_FILE` (path to a JSON file). When unset,
-`targets.json` is loaded and merged with `targets.local.json` if present.
-
-List configured targets:
+`mutant:<file.html>` URLs resolve to seeded fixtures under `src/mutants/fixtures/`.
+Optional env: `MONKEY_BOT_TARGETS_FILE`. Auth credentials use env vars named in
+the target `auth.usernameEnv` / `auth.passwordEnv` (never commit secrets).
 
 ```bash
 curl -s http://localhost:3000/targets
-```
-
-Run a bot by target id:
-
-```bash
 curl -s -X POST http://localhost:3000/run/form-xss \
   -H "Content-Type: application/json" \
-  -d '{"targetId": "local-app"}'
+  -d '{"targetId":"mutant-lab-reflected-xss","writeArtifact":true}'
 ```
 
-Request-body `url` / selectors override the named target when both are set.
+Baseline script (writes `./artifacts/`):
+
+```bash
+pnpm baseline:form-xss
+```
 
 ## API
 
@@ -59,72 +57,46 @@ Request-body `url` / selectors override the named target when both are set.
 | `GET` | `/health` | Health probe |
 | `GET` | `/bots` | List bots |
 | `GET` | `/targets` | List configured target URLs |
+| `GET` | `/mutants/:file.html` | Serve a mutant fixture over HTTP |
 | `POST` | `/run` | Run default bot (`smoke`) |
 | `POST` | `/run/:botId` | Run a specific bot |
+| `POST` | `/run/suite` | Calibrate/run security bots for a target |
+
+### Suite
+
+```bash
+curl -s -X POST http://localhost:3000/run/suite \
+  -H "Content-Type: application/json" \
+  -d '{"targetId":"mutant-lab-reflected-xss","writeArtifact":true}'
+```
 
 ### Bots
 
 | id | Role |
 | --- | --- |
-| `smoke` | Browser smoke check (title, console errors, failed requests) |
-| `form-xss` | Reflected XSS form probe with mutant calibration |
+| `smoke` | Browser smoke check |
+| `form-xss` | Reflected + attribute XSS probe with mutant calibration |
 
-### `form-xss` — calibrate only
+## Mutants
 
-```bash
-curl -s -X POST http://localhost:3000/run/form-xss \
-  -H "Content-Type: application/json" \
-  -d '{"calibrateOnly": true}'
-```
-
-Calibration must **kill** `reflected-xss`, leave `escaped-echo` alone, and treat
-`arid-log-only` as noise. If calibration fails, `probeTrusted` is false and
-target findings are suppressed (`UNKNOWN = FAIL`).
-
-### `form-xss` — target + mutants
-
-```bash
-curl -s -X POST http://localhost:3000/run/form-xss \
-  -H "Content-Type: application/json" \
-  -d '{
-    "targetId": "local-app",
-    "timeoutMs": 20000
-  }'
-```
-
-A finding is reported only when:
-
-1. the must-kill mutant was killed, and
-2. the target shows the same oracle (`window.__MB_XSS__ === token`).
+Calibration must **kill** `reflected-xss` and `attr-xss`, leave escaped controls
+alone, and treat `arid-log-only` as noise. If calibration fails, `probeTrusted`
+is false and target findings are suppressed (`UNKNOWN = FAIL`).
 
 ## Layout
 
 ```text
-config/
-  targets.example.json
-  targets.json
-  targets.local.json   # gitignored local overrides
+config/                 # target URLs
+artifacts/              # gitignored evidence JSON
 src/
-  config/targets.ts    # loader + resolveTarget
-  bots/
-    smoke/
-    form-xss/
-  mutants/
-    fixtures/
-    catalog.ts
-  lib/chromium.ts
+  findings/types.ts     # shared finding schema
+  config/targets.ts
+  lib/{chromium,auth,artifacts}.ts
+  bots/{smoke,form-xss}/
+  mutants/fixtures/
   orchestrator/
 ```
 
-### Add a bot
-
-1. Create `src/bots/<id>/{index,schema,runner}.ts`.
-2. Pair it with a mutant fixture under `src/mutants/fixtures/` when it makes
-   security claims.
-3. Register it in `src/orchestrator/registry.ts`.
-4. Call `POST /run/<id>`.
-
 ## Agent rules
 
-Cursor/Claude always-on guidance lives in `AGENTS.md`, `CLAUDE.md`, and
-`.cursor/rules/`. Devil kit rules are seeded under `.claude/rules/devil/`.
+See `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/`.
