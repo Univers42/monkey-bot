@@ -5,12 +5,26 @@
   "targets": {
     "local-app": {
       "url": "http://localhost:5173/",
-      "description": "Local Univers42 app under test",
+      "description": "Local Univers42 app under test (override in targets.local.json)",
       "formSelector": "form",
       "fieldSelector": "input[type='text'], input:not([type]), textarea",
       "submitSelector": "button[type='submit'], input[type='submit'], button",
       "waitForSelector": "form",
       "timeoutMs": 20000
+    },
+    "mutant-lab-reflected-xss": {
+      "url": "mutant:reflected-xss.html",
+      "description": "Baseline lab target: seeded reflected XSS mutant (must produce a finding when probeTrusted)",
+      "formSelector": "form",
+      "fieldSelector": "#q",
+      "submitSelector": "button[type='submit']"
+    },
+    "mutant-lab-attr-xss": {
+      "url": "mutant:attr-xss.html",
+      "description": "Baseline lab target: seeded attribute XSS mutant",
+      "formSelector": "form",
+      "fieldSelector": "#q",
+      "submitSelector": "button[type='submit']"
     }
   }
 }
