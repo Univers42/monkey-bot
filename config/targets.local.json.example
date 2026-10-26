@@ -1,0 +1,22 @@
+{
+  "defaults": {
+    "timeoutMs": 30000
+  },
+  "targets": {
+    "univers42-app": {
+      "url": "https://YOUR-ORG-APP.example/",
+      "description": "Real Univers42 organization app under authorized test",
+      "formSelector": "form",
+      "fieldSelector": "input[type='text'], textarea",
+      "submitSelector": "button[type='submit']",
+      "auth": {
+        "loginUrl": "https://YOUR-ORG-APP.example/login",
+        "usernameSelector": "input[name='email']",
+        "passwordSelector": "input[name='password']",
+        "submitSelector": "button[type='submit']",
+        "usernameEnv": "MONKEY_BOT_TARGET_USER",
+        "passwordEnv": "MONKEY_BOT_TARGET_PASSWORD"
+      }
+    }
+  }
+}
