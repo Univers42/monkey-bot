@@ -109,6 +109,55 @@ export const openApiDocument = {
         }
       }
     },
+    "/mutants/{file}": {
+      get: {
+        summary: "Serve a mutant HTML fixture",
+        parameters: [
+          {
+            name: "file",
+            in: "path",
+            required: true,
+            schema: { type: "string", example: "reflected-xss.html" }
+          }
+        ],
+        responses: {
+          200: { description: "HTML fixture" },
+          404: { description: "Unknown fixture" }
+        }
+      }
+    },
+    "/run/suite": {
+      post: {
+        summary: "Calibrate and run security bots for a target",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  targetId: { type: "string", example: "mutant-lab-reflected-xss" },
+                  url: { type: "string", format: "uri" },
+                  botIds: {
+                    type: "array",
+                    items: { type: "string" },
+                    example: ["form-xss"]
+                  },
+                  calibrateOnly: { type: "boolean" },
+                  writeArtifact: { type: "boolean" },
+                  timeoutMs: { type: "integer", minimum: 1 }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: "Suite completed" },
+          400: { description: "Validation error" },
+          500: { description: "Suite execution error" }
+        }
+      }
+    },
     "/run": {
       post: {
         summary: "Run the default bot (smoke)",
