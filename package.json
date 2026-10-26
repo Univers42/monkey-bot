@@ -12,8 +12,11 @@
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --exclude '**/*.calibration.test.ts'",
+    "test:calibration": "vitest run src/bots/form-xss/runner.calibration.test.ts",
+    "test:all": "vitest run",
     "test:watch": "vitest",
+    "baseline:form-xss": "tsx scripts/baseline-form-xss.ts",
     "audit": "npm audit"
   },
   "engines": {
