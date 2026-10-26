@@ -4,14 +4,16 @@ import { describe, expect, it } from "vitest";
 import { MUTANT_FIXTURES, fixtureFileUrl } from "./catalog";
 
 describe("mutant catalog", () => {
-  it("includes must-kill, must-survive, and arid expectations", () => {
-    const byExpectation = Object.fromEntries(
-      MUTANT_FIXTURES.map((m) => [m.expectation, m.id])
-    );
+  it("includes reflected and attribute XSS expectations", () => {
+    const ids = MUTANT_FIXTURES.map((m) => m.id);
+    expect(ids).toContain("reflected-xss");
+    expect(ids).toContain("escaped-echo");
+    expect(ids).toContain("arid-log-only");
+    expect(ids).toContain("attr-xss");
+    expect(ids).toContain("attr-escaped");
 
-    expect(byExpectation["must-kill"]).toBe("reflected-xss");
-    expect(byExpectation["must-survive"]).toBe("escaped-echo");
-    expect(byExpectation.arid).toBe("arid-log-only");
+    const mustKill = MUTANT_FIXTURES.filter((m) => m.expectation === "must-kill").map((m) => m.id);
+    expect(mustKill).toEqual(["reflected-xss", "attr-xss"]);
   });
 
   it("points every fixture file at an existing HTML file", () => {
@@ -23,4 +25,3 @@ describe("mutant catalog", () => {
     }
   });
 });
-
