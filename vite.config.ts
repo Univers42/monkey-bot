@@ -1,9 +1,12 @@
 import { defineConfig, loadEnv, Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { listTargetSummaries } from "./src/config/targets";
+import { fixturesDir } from "./src/mutants/catalog";
 import { BotInputValidationError, BotNotFoundError } from "./src/orchestrator/errors";
 import { listBots, runBotById } from "./src/orchestrator/runBot";
+import { parseSuiteInput, runSuite } from "./src/orchestrator/runSuite";
 import { openApiDocument } from "./src/swagger";
 
 type RunBody = Record<string, unknown>;
@@ -126,6 +129,24 @@ function apiPlugin(): Plugin {
       return;
     }
 
+    const mutantMatch = method === "GET" ? normalizedPath.match(/^\/mutants\/([^/]+)$/) : null;
+    if (mutantMatch) {
+      const fileName = decodeURIComponent(mutantMatch[1]);
+      if (!/^[a-zA-Z0-9._-]+\.html$/.test(fileName)) {
+        sendJson(res, 400, { ok: false, error: "Invalid mutant fixture name" });
+        return;
+      }
+      const filePath = join(fixturesDir(), fileName);
+      if (!existsSync(filePath)) {
+        sendJson(res, 404, { ok: false, error: `Unknown mutant fixture: ${fileName}` });
+        return;
+      }
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.end(readFileSync(filePath, "utf8"));
+      return;
+    }
+
     if (method === "GET" && normalizedPath === "/docs/openapi.json") {
       sendJson(res, 200, openApiDocument);
       return;
@@ -135,6 +156,29 @@ function apiPlugin(): Plugin {
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.end(docsHtml());
+      return;
+    }
+
+    if (method === "POST" && normalizedPath === "/run/suite") {
+      readJsonBody(req)
+        .then(async (body: RunBody) => {
+          try {
+            const parsed = parseSuiteInput(body);
+            const result = await runSuite(parsed);
+            sendJson(res, 200, { ok: result.ok, result });
+          } catch (error) {
+            if (error instanceof BotInputValidationError) {
+              sendJson(res, 400, { ok: false, error: error.message });
+              return;
+            }
+            const message = error instanceof Error ? error.message : "Unknown suite error";
+            sendJson(res, 500, { ok: false, error: message });
+          }
+        })
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : "Invalid request body";
+          sendJson(res, 400, { error: message });
+        });
       return;
     }
 
