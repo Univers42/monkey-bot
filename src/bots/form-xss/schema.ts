@@ -1,17 +1,17 @@
 import { resolveTarget } from "../../config/targets";
+import type { TargetAuthConfig } from "../../lib/auth";
 import { BotInputValidationError } from "../../orchestrator/errors";
 
 export type FormXssBotInput = {
-  /** Target page URL. Omit when using targetId or calibrateOnly. */
   url?: string;
-  /** Named target from config/targets.json (and optional targets.local.json). */
   targetId?: string;
   formSelector?: string;
   fieldSelector?: string;
   submitSelector?: string;
   timeoutMs?: number;
-  /** When true, skip the target and only calibrate against mutants. */
   calibrateOnly?: boolean;
+  writeArtifact?: boolean;
+  auth?: TargetAuthConfig;
 };
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -38,11 +38,17 @@ export function parseFormXssBotInput(input: unknown): FormXssBotInput {
     throw new BotInputValidationError("Field calibrateOnly must be a boolean");
   }
 
+  const writeArtifact = input.writeArtifact;
+  if (writeArtifact !== undefined && typeof writeArtifact !== "boolean") {
+    throw new BotInputValidationError("Field writeArtifact must be a boolean");
+  }
+
   let url = optionalString("url", input.url);
   const targetId = optionalString("targetId", input.targetId);
   let formSelector = optionalString("formSelector", input.formSelector);
   let fieldSelector = optionalString("fieldSelector", input.fieldSelector);
   let submitSelector = optionalString("submitSelector", input.submitSelector);
+  let auth: TargetAuthConfig | undefined;
 
   let timeoutMs: number | undefined;
   if (input.timeoutMs !== undefined) {
@@ -59,6 +65,7 @@ export function parseFormXssBotInput(input: unknown): FormXssBotInput {
     fieldSelector = fieldSelector ?? target.fieldSelector;
     submitSelector = submitSelector ?? target.submitSelector;
     timeoutMs = timeoutMs ?? target.timeoutMs;
+    auth = target.auth;
   }
 
   if (!calibrateOnly && url === undefined) {
@@ -74,6 +81,8 @@ export function parseFormXssBotInput(input: unknown): FormXssBotInput {
     fieldSelector,
     submitSelector,
     timeoutMs,
-    calibrateOnly
+    calibrateOnly,
+    writeArtifact,
+    auth
   };
 }
