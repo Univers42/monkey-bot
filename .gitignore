@@ -168,6 +168,9 @@ dist
 .claude/devil.env
 .scratch/
 
-# Local org target URLs (copy from config/targets.example.json)
+# Local org target URLs (copy from config/targets.local.json.example)
 config/targets.local.json
+
+# Probe/suite evidence JSON
+artifacts/
 
