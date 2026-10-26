@@ -1,8 +1,12 @@
-import { MUTANT_FIXTURES, fixtureFileUrl, type MutantFixture } from "../../mutants/catalog";
+import { writeArtifact } from "../../lib/artifacts";
+import { openAuthenticatedContext, type TargetAuthConfig } from "../../lib/auth";
 import { launchChromium } from "../../lib/chromium";
+import type { SecurityFinding } from "../../findings/types";
+import { MUTANT_FIXTURES, fixtureFileUrl, type MutantFixture } from "../../mutants/catalog";
 import {
   DEFAULT_SELECTORS,
   probeFormXss,
+  probeFormXssForFault,
   probeTrustedForFaultClass,
   verdictForExpectation,
   type CalibrationVerdict,
@@ -24,19 +28,15 @@ export type MutantCalibrationRow = {
   payload: string;
 };
 
-export type FormXssFinding = {
-  faultClass: "reflected-xss";
-  payload: string;
-  evidence: string;
-  finalUrl: string;
-};
-
 export type FormXssBotResult = {
+  botId: "form-xss";
+  targetId?: string;
   probeTrusted: boolean;
   calibrations: MutantCalibrationRow[];
   target: ProbeHit | null;
-  findings: FormXssFinding[];
+  findings: SecurityFinding[];
   suppressed: string[];
+  artifactPath?: string;
 };
 
 function resolveSelectors(input: FormXssBotInput): ProbeSelectors {
@@ -52,14 +52,21 @@ export async function runFormXssBot(input: FormXssBotInput): Promise<FormXssBotR
   const selectors = resolveSelectors(input);
   const browser = await launchChromium();
   const suppressed: string[] = [];
+  const auth = input.auth as TargetAuthConfig | undefined;
 
   try {
-    const context = await browser.newContext();
+    const { context } = await openAuthenticatedContext(browser, auth);
     const page = await context.newPage();
 
     const calibrations: MutantCalibrationRow[] = [];
     for (const mutant of MUTANT_FIXTURES) {
-      const hit = await probeFormXss(page, fixtureFileUrl(mutant.fileName), DEFAULT_SELECTORS, timeout);
+      const hit = await probeFormXssForFault(
+        page,
+        fixtureFileUrl(mutant.fileName),
+        DEFAULT_SELECTORS,
+        timeout,
+        mutant.faultClass
+      );
       const verdict = verdictForExpectation(mutant.expectation, hit.detected);
       calibrations.push({
         mutantId: mutant.id,
@@ -73,7 +80,7 @@ export async function runFormXssBot(input: FormXssBotInput): Promise<FormXssBotR
       });
 
       if (verdict === "arid-noise") {
-        suppressed.push(`arid mutant ${mutant.id}: console-only noise is not a finding`);
+        suppressed.push(`arid mutant ${mutant.id}: noise is not a finding`);
       }
       if (verdict === "false-positive") {
         suppressed.push(
@@ -83,8 +90,7 @@ export async function runFormXssBot(input: FormXssBotInput): Promise<FormXssBotR
     }
 
     const falsePositiveControl = calibrations.some((c) => c.verdict === "false-positive");
-    const probeTrusted =
-      !falsePositiveControl && probeTrustedForFaultClass(calibrations);
+    const probeTrusted = !falsePositiveControl && probeTrustedForFaultClass(calibrations);
 
     if (!probeTrusted) {
       suppressed.push(
@@ -93,17 +99,22 @@ export async function runFormXssBot(input: FormXssBotInput): Promise<FormXssBotR
     }
 
     let target: ProbeHit | null = null;
-    const findings: FormXssFinding[] = [];
+    const findings: SecurityFinding[] = [];
 
     if (!input.calibrateOnly && input.url) {
       target = await probeFormXss(page, input.url, selectors, timeout);
 
       if (target.detected && probeTrusted) {
         findings.push({
-          faultClass: "reflected-xss",
-          payload: target.payload,
-          evidence: target.evidence,
-          finalUrl: target.finalUrl
+          faultClass: target.faultClass,
+          targetId: input.targetId,
+          severity: "high",
+          evidence: {
+            payload: target.payload,
+            effect: target.evidence,
+            finalUrl: target.finalUrl,
+            sink: "form-field"
+          }
         });
       } else if (target.detected && !probeTrusted) {
         suppressed.push(
@@ -116,13 +127,21 @@ export async function runFormXssBot(input: FormXssBotInput): Promise<FormXssBotR
 
     await context.close();
 
-    return {
+    const result: FormXssBotResult = {
+      botId: "form-xss",
+      targetId: input.targetId,
       probeTrusted,
       calibrations,
       target,
       findings,
       suppressed
     };
+
+    if (input.writeArtifact) {
+      result.artifactPath = writeArtifact(`form-xss-${input.targetId ?? "calibrate"}`, result);
+    }
+
+    return result;
   } finally {
     await browser.close();
   }
