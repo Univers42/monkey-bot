@@ -47,6 +47,38 @@ describe("targets config", () => {
     ]);
   });
 
+  it("resolves mutant: fixture URLs to file:// paths", () => {
+    writeTargets({
+      targets: {
+        lab: { url: "mutant:reflected-xss.html" }
+      }
+    });
+
+    const resolved = resolveTarget("lab");
+    expect(resolved.url.startsWith("file:")).toBe(true);
+    expect(resolved.url).toContain("reflected-xss.html");
+  });
+
+  it("parses optional auth blocks", () => {
+    writeTargets({
+      targets: {
+        secured: {
+          url: "http://localhost:2/",
+          auth: {
+            loginUrl: "http://localhost:2/login",
+            usernameSelector: "#user",
+            passwordSelector: "#pass",
+            submitSelector: "button",
+            usernameEnv: "U",
+            passwordEnv: "P"
+          }
+        }
+      }
+    });
+
+    expect(resolveTarget("secured").auth?.loginUrl).toBe("http://localhost:2/login");
+  });
+
   it("rejects unknown target ids with known names", () => {
     writeTargets({
       targets: {
@@ -72,5 +104,6 @@ describe("targets config", () => {
     delete process.env.MONKEY_BOT_TARGETS_FILE;
     const summaries = listTargetSummaries();
     expect(summaries.some((t) => t.id === "local-app")).toBe(true);
+    expect(summaries.some((t) => t.id === "mutant-lab-reflected-xss")).toBe(true);
   });
 });
