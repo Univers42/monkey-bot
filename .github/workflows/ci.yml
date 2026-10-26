@@ -2,7 +2,7 @@
 # CI Pipeline
 # ============================================
 # Runs on every push to develop/main and on every PR.
-# Steps: lint → typecheck
+# Steps: lint → typecheck → unit tests → mutant calibration (Chromium)
 # Package manager: pnpm
 # ============================================
 
@@ -19,9 +19,8 @@ env:
   PNPM_VERSION: "10.17.1"
 
 jobs:
-  # ── Lint ─────────────────────────────────────────────
   lint:
-    name: 🔍 Lint
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,9 +44,8 @@ jobs:
       - name: Lint project
         run: pnpm run lint
 
-  # ── Type Check ──────────────────────────────────────
   typecheck:
-    name: 🏗️ Type Check (Phase 0 strict)
+    name: Type Check
     runs-on: ubuntu-latest
     needs: lint
     steps:
@@ -69,6 +67,70 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Strict Phase 0 check: No emits allowed
       - name: Typecheck project
         run: pnpm run typecheck
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: typecheck
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test
+
+  calibration:
+    name: Mutant Calibration
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium
+          echo "CHROMIUM_PATH=$(command -v chromium-browser || command -v chromium)" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run mutant calibration (hard gate)
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: pnpm test:calibration
+
+      - name: Baseline form-xss against mutant lab
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: pnpm baseline:form-xss
