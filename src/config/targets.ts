@@ -1,5 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
+import type { TargetAuthConfig } from "../lib/auth";
+import { fixtureFileUrl } from "../mutants/catalog";
 import { BotInputValidationError } from "../orchestrator/errors";
 
 export type TargetEntry = {
@@ -10,6 +12,7 @@ export type TargetEntry = {
   submitSelector?: string;
   waitForSelector?: string;
   timeoutMs?: number;
+  auth?: TargetAuthConfig;
 };
 
 export type TargetsFile = {
@@ -43,26 +46,70 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function optionalString(field: string, value: unknown, id: string): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new BotInputValidationError(`Target "${id}" field ${field} must be a non-empty string`);
+  }
+  return value;
+}
+
+function parseAuth(id: string, value: unknown): TargetAuthConfig | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!isObject(value)) {
+    throw new BotInputValidationError(`Target "${id}" auth must be an object`);
+  }
+
+  const requireField = (field: string): string => {
+    const v = value[field];
+    if (typeof v !== "string" || v.trim() === "") {
+      throw new BotInputValidationError(`Target "${id}" auth.${field} must be a non-empty string`);
+    }
+    return v;
+  };
+
+  let timeoutMs: number | undefined;
+  if (value.timeoutMs !== undefined) {
+    if (typeof value.timeoutMs !== "number" || !Number.isInteger(value.timeoutMs) || value.timeoutMs < 1) {
+      throw new BotInputValidationError(`Target "${id}" auth.timeoutMs must be an integer >= 1`);
+    }
+    timeoutMs = value.timeoutMs;
+  }
+
+  return {
+    loginUrl: requireField("loginUrl"),
+    usernameSelector: requireField("usernameSelector"),
+    passwordSelector: requireField("passwordSelector"),
+    submitSelector: requireField("submitSelector"),
+    usernameEnv: requireField("usernameEnv"),
+    passwordEnv: requireField("passwordEnv"),
+    storageStatePath: optionalString("storageStatePath", value.storageStatePath, id),
+    timeoutMs
+  };
+}
+
 function parseTargetEntry(id: string, value: unknown): TargetEntry {
   if (!isObject(value)) {
     throw new BotInputValidationError(`Target "${id}" must be an object`);
   }
 
-  const url = value.url;
-  if (typeof url !== "string" || url.trim() === "") {
+  const rawUrl = value.url;
+  if (typeof rawUrl !== "string" || rawUrl.trim() === "") {
     throw new BotInputValidationError(`Target "${id}" is missing a non-empty url`);
   }
-
-  const optionalString = (field: string): string | undefined => {
-    const v = value[field];
-    if (v === undefined) {
-      return undefined;
+  let url: string = rawUrl;
+  // mutant:<file.html> resolves to a local seeded fixture (baseline / lab targets)
+  if (url.startsWith("mutant:")) {
+    const fileName = url.slice("mutant:".length);
+    if (!/^[a-zA-Z0-9._-]+\.html$/.test(fileName)) {
+      throw new BotInputValidationError(`Target "${id}" has invalid mutant fixture name`);
     }
-    if (typeof v !== "string" || v.trim() === "") {
-      throw new BotInputValidationError(`Target "${id}" field ${field} must be a non-empty string`);
-    }
-    return v;
-  };
+    url = fixtureFileUrl(fileName);
+  }
 
   let timeoutMs: number | undefined;
   if (value.timeoutMs !== undefined) {
@@ -74,12 +121,13 @@ function parseTargetEntry(id: string, value: unknown): TargetEntry {
 
   return {
     url,
-    description: optionalString("description"),
-    formSelector: optionalString("formSelector"),
-    fieldSelector: optionalString("fieldSelector"),
-    submitSelector: optionalString("submitSelector"),
-    waitForSelector: optionalString("waitForSelector"),
-    timeoutMs
+    description: optionalString("description", value.description, id),
+    formSelector: optionalString("formSelector", value.formSelector, id),
+    fieldSelector: optionalString("fieldSelector", value.fieldSelector, id),
+    submitSelector: optionalString("submitSelector", value.submitSelector, id),
+    waitForSelector: optionalString("waitForSelector", value.waitForSelector, id),
+    timeoutMs,
+    auth: parseAuth(id, value.auth)
   };
 }
 
@@ -151,7 +199,6 @@ export function loadTargetsFile(): TargetsFile {
   let file = parseTargetsFile(readJsonFile(primaryPath), primaryPath);
 
   const localPath = projectPath(LOCAL_OVERRIDE_PATH);
-  // Only merge the default local override when not pointing at a custom file
   if (!process.env.MONKEY_BOT_TARGETS_FILE && existsSync(localPath)) {
     const local = parseTargetsFile(readJsonFile(localPath), localPath);
     file = mergeTargets(file, local);
