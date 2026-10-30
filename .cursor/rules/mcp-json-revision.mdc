@@ -1,0 +1,16 @@
+---
+description: Ask the user to review every change to .cursor/mcp.json
+alwaysApply: true
+---
+
+# MCP config revision
+
+Whenever you create, edit, or delete [`.cursor/mcp.json`](.cursor/mcp.json):
+
+1. Make the change.
+2. **Stop and ask the user to revise/approve** the MCP config before treating
+   the work as done (show the diff or final JSON briefly).
+3. Do not assume silent approval. Wait for an explicit OK, or apply the user’s
+   requested edits.
+4. If other files changed in the same task, still ask specifically about
+   `.cursor/mcp.json`.
