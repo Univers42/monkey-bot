@@ -40,3 +40,10 @@ a **bot**, or a **mutant fixture** that makes security claims trustworthy.
 Project rules under `.cursor/rules/` with `alwaysApply: true` restate the
 purpose, mutant gate, commit policy, and test policy for every new Cursor
 conversation. Keep them in sync with this file when the mandate changes.
+
+MCP: `.cursor/mcp.json` registers `monkey-bot-security` (mutant calibrate /
+form-XSS / Prismatica scan / headers) and Playwright. Use those tools for
+authorized org target probing; findings still require mutant calibration.
+Ask the user to revise every change to `.cursor/mcp.json`.
+File GitHub issues for calibrated findings only after asking the user
+(default repo for Prismatica: `Univers42/prismatica`).
