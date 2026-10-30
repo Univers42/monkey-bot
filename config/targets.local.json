@@ -1,0 +1,34 @@
+{
+  "defaults": {
+    "timeoutMs": 45000
+  },
+  "targets": {
+    "prismatica-home": {
+      "url": "https://prismatica-eta.vercel.app/?lang=en",
+      "description": "Prismatica marketing home (Univers42 / track-binocle)",
+      "formSelector": "form",
+      "fieldSelector": "#footer-newsletter-email, input[type='email'], input[type='text'], textarea",
+      "submitSelector": "form button[type='submit'], form button:not([type]), button[type='submit']",
+      "waitForSelector": "#footer-newsletter-email",
+      "timeoutMs": 45000
+    },
+    "prismatica-newsletter": {
+      "url": "https://prismatica-eta.vercel.app/?lang=en",
+      "description": "Prismatica footer newsletter subscribe form",
+      "formSelector": "form[action*='newsletter']",
+      "fieldSelector": "#footer-newsletter-email",
+      "submitSelector": "form[action*='newsletter'] button[type='submit'], form[action*='newsletter'] button",
+      "waitForSelector": "#footer-newsletter-email",
+      "timeoutMs": 45000
+    },
+    "prismatica-auth": {
+      "url": "https://prismatica-eta.vercel.app/?lang=en",
+      "description": "Prismatica sign-in / create-account portal fields (open Sign in first if needed)",
+      "formSelector": "form",
+      "fieldSelector": "#portal-username, #portal-email, input[name='username'], input[name='email']",
+      "submitSelector": "button[type='submit']",
+      "waitForSelector": "body",
+      "timeoutMs": 45000
+    }
+  }
+}
