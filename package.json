@@ -17,14 +17,17 @@
     "test:all": "vitest run",
     "test:watch": "vitest",
     "baseline:form-xss": "tsx scripts/baseline-form-xss.ts",
+    "mcp": "tsx mcp/server.ts",
     "audit": "npm audit"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "playwright-core": "^1.53.2",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.1",
