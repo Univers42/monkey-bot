@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "monkey-bot-security": {
+      "command": "pnpm",
+      "args": ["exec", "tsx", "${workspaceFolder}/mcp/server.ts"],
+      "env": {
+        "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+        "CHROMIUM_PATH": "${userHome}/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome"
+      },
+      "envFile": "${workspaceFolder}/.env"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {
+        "PLAYWRIGHT_MCP_CAPABILITIES": "core,vision"
+      }
+    }
+  }
+}
