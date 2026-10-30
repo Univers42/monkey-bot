@@ -1,0 +1,19 @@
+---
+description: File GitHub issues for security findings after asking the user
+alwaysApply: true
+---
+
+# GitHub security issues
+
+When a probe yields a **finding** (mutant-calibrated evidence path) against an
+org target:
+
+1. Draft the issue: title, severity, surface, payload/oracle, observed effect,
+   mutant calibration note, and suggested smallest fix.
+2. **Ask the user before creating** any GitHub issue. Show the draft and the
+   target repo (default `Univers42/prismatica` for Prismatica).
+3. Create the issue with `gh` only after explicit approval (or an explicit
+   “create this issue” instruction for that draft).
+4. One finding → one issue unless the user asks to batch.
+5. Hypotheses without evidence (`UNKNOWN`) are not issues — say so and stop.
+6. Never put secrets, tokens, or credentials in the issue body.
