@@ -97,6 +97,31 @@ src/
   orchestrator/
 ```
 
+## MCP (Cursor) — Prismatica / vuln probes
+
+Project MCP config: [`.cursor/mcp.json`](.cursor/mcp.json).
+
+| Server | Role |
+| --- | --- |
+| `monkey-bot-security` | Mutant calibration, form-XSS probes, Prismatica scan, header checks |
+| `playwright` | Browser automation MCP for recon |
+
+After reload/restart Cursor, enable the servers under **Settings → MCP**. Tools:
+
+- `calibrate_mutants` — Google mutants gate
+- `list_targets` — configured targets/bots
+- `probe_form_xss` — probe `targetId` or URL
+- `check_security_headers` — header observations (not findings alone)
+- `scan_prismatica` — calibrate + every `prismatica-*` target
+
+Run the server locally:
+
+```bash
+pnpm mcp
+```
+
+Prismatica targets live in `config/targets.local.json` (gitignored).
+
 ## Agent rules
 
 See `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/`.
